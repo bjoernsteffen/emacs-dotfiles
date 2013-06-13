@@ -261,7 +261,7 @@ Missing packages are installed automatically."
 ;; flyspell-mode does spell-checking on the fly as you type
 (require 'flyspell)
 (setq ispell-program-name "aspell"
-      ispell-extra-args '("--sug-mode=normal")) ; fast or ultra
+      ispell-extra-args '("--sug-mode=fast")) ; normal or fast or ultra
 
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 (global-set-key (kbd "C-c j") 'flyspell-check-previous-highlighted-word)
@@ -271,12 +271,12 @@ Missing packages are installed automatically."
 
 ;; Automatically reverting buffers
 (global-auto-revert-mode t)
+(setq auto-revert-check-vc-info t)
 
 (random t) ;; Seed the random-number generator
 
 ;; Save Session across Sessions
 (desktop-save-mode 1)
-
 
 ;; Recent files mode
 (require 'recentf)
