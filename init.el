@@ -277,6 +277,7 @@ Missing packages are installed automatically."
 
 ;; Save Session across Sessions
 (desktop-save-mode 1)
+(setq desktop-dirname my-savefile-dir)
 
 ;; Recent files mode
 (require 'recentf)
