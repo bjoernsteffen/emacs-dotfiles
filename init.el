@@ -112,7 +112,7 @@ Missing packages are installed automatically."
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 
 (when window-system
-  (setq frame-title-format '(buffer-file-name "%f" ("%b")))
+  (setq frame-title-format '("" "Emacs - %b"))
   (tooltip-mode -1)
   (mouse-wheel-mode t)
   (blink-cursor-mode -1)
@@ -127,10 +127,8 @@ Missing packages are installed automatically."
       sentence-end-double-space nil
       shift-select-mode nil
       mouse-yank-at-point t
-      ediff-window-setup-function 'ediff-setup-windows-plain
       oddmuse-directory (concat user-emacs-directory "oddmuse")
-      save-place-file (concat user-emacs-directory "places")
-      diff-switches "-u")
+      save-place-file (concat user-emacs-directory "places"))
 
 ; meaningful names for buffers with the same name
 (require 'uniquify)
@@ -172,9 +170,9 @@ Missing packages are installed automatically."
 
 
 ;; nice scrolling
-(setq scroll-margin 0
-      scroll-conservatively 100000
-      scroll-preserve-screen-position 1)
+(setq scroll-margin 5)
+;      scroll-conservatively 100000
+;      scroll-preserve-screen-position 1)
 
 ;; Highlight matching parentheses when the point is on them.
 (show-paren-mode 1)
@@ -207,20 +205,20 @@ Missing packages are installed automatically."
 
 ;; Finding Files At Point
 (require 'ffap)
-(defvar ffap-c-commment-regexp "^/\\*+"
-  "Matches an opening C-style comment, like \"/***\".")
+;; (defvar ffap-c-commment-regexp "^/\\*+"
+;;   "Matches an opening C-style comment, like \"/***\".")
 
-(defadvice ffap-file-at-point (after avoid-c-comments activate)
-  "Don't return paths like \"/******\" unless they actually exist.
+;; (defadvice ffap-file-at-point (after avoid-c-comments activate)
+;;   "Don't return paths like \"/******\" unless they actually exist.
 
-This fixes the bug where ido would try to suggest a C-style
-comment as a filename."
-  (ignore-errors
-    (when (and ad-return-value
-               (string-match-p ffap-c-commment-regexp
-                               ad-return-value)
-               (not (ffap-file-exists-string ad-return-value)))
-      (setq ad-return-value nil))))
+;; This fixes the bug where ido would try to suggest a C-style
+;; comment as a filename."
+;;   (ignore-errors
+;;     (when (and ad-return-value
+;;                (string-match-p ffap-c-commment-regexp
+;;                                ad-return-value)
+;;                (not (ffap-file-exists-string ad-return-value)))
+;;       (setq ad-return-value nil))))
 
 (set-default 'indent-tabs-mode nil)
 (set-default 'indicate-empty-lines t)
@@ -276,12 +274,24 @@ comment as a filename."
 
 (random t) ;; Seed the random-number generator
 
+;; Save Session across Sessions
+(desktop-save-mode 1)
 
-;; Recent files stuff
+
+;; Recent files mode
 (require 'recentf)
 (recentf-mode 1)
 (setq recentf-max-menu-items 25)
-(global-set-key "\C-x\ \C-r" 'recentf-open-files)
+(defun ido-recentf-open ()
+  "Use `ido-completing-read' to \\[find-file] a recent file"
+  (interactive)
+  (if (find-file (ido-completing-read "Find recent file: " recentf-list))
+      (message "Opening file...")
+    (message "Aborting")))
+;; get rid of `find-file-read-only' and replace it with something
+;; more useful.
+(global-set-key (kbd "C-x C-r") 'ido-recentf-open)
+ 
 
 ;; Backup Files
 (setq make-backup-files t
@@ -323,18 +333,6 @@ comment as a filename."
 (eval-after-load 'grep
   '(when (boundp 'grep-find-ignored-files)
      (add-to-list 'grep-find-ignored-files "*.class")))
-
-;; Cosmetics
-
-(eval-after-load 'diff-mode
-  '(progn
-     (set-face-foreground 'diff-added "green4")
-     (set-face-foreground 'diff-removed "red3")))
-
-(eval-after-load 'magit
-  '(progn
-     (set-face-foreground 'magit-diff-add "green4")
-     (set-face-foreground 'magit-diff-del "red3")))
 
 ;; Calendar and Time settings
 (setq calendar-week-start-day 1)
@@ -560,9 +558,20 @@ directory."
 ;; enable some really cool extensions like C-x C-j(dired-jump)
 (require 'dired-x)
 
-;; ediff - don't start another frame
+;; ediff 
 (require 'ediff)
+(setq diff-switches "-u")
+; don't start another frame
 (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+;; (eval-after-load 'diff-mode
+;;   '(progn
+;;      (set-face-foreground 'diff-added "green4")
+;;      (set-face-foreground 'diff-removed "red3")))
+
+;; (eval-after-load 'magit
+;;   '(progn
+;;      (set-face-foreground 'magit-diff-add "green4")
+;;      (set-face-foreground 'magit-diff-del "red3")))
 
 ;; clean up obsolete buffers automatically
 (require 'midnight)
@@ -786,7 +795,7 @@ directory."
         ("HTML Viewer" "open %o")))
 
 ;; Enable TikZ Syntax highlightning
-(load "~/.emacs.d/auc-tikz-struct")
+;(load "~/.emacs.d/auc-tikz-struct")
 
 ;; Start Emacs Server
 (server-start)
