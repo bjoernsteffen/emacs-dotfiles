@@ -16,7 +16,7 @@
   '(ace-jump-mode ack-and-a-half dash diminish elisp-slime-nav
     expand-region flycheck gist
     git-commit-mode gitconfig-mode gitignore-mode
-    ido-ubiquitous
+    ido-ubiquitous dired+
     auctex
     magit melpa rainbow-mode
     smex volatile-highlights yasnippet zenburn-theme)
@@ -192,6 +192,7 @@ Missing packages are installed automatically."
       ido-save-directory-list-file (expand-file-name "ido.hist" my-savefile-dir)
       ido-max-prospects 10)
 (ido-mode t)
+(ido-everywhere t)
 (ido-ubiquitous-mode t)
 
 ;; smex, remember recently and most frequently used commands
@@ -405,122 +406,99 @@ Missing packages are installed automatically."
 
 ;; EShell
 
+(require 'em-hist)
 (setq eshell-cmpl-cycle-completions nil
       eshell-save-history-on-exit t
       eshell-buffer-shorthand t
       eshell-cmpl-dir-ignore "\\`\\(\\.\\.?\\|CVS\\|\\.svn\\|\\.git\\)/\\'")
+(load "~/.emacs.d/eshell-customizations.el")
 
-;;;###autoload
+
+;; ;;;###autoload
 (eval-after-load 'esh-opt
-  '(progn
-     (require 'em-prompt)
-     (require 'em-term)
-     (require 'em-cmpl)
-     (setenv "PAGER" "cat")
-     (set-face-attribute 'eshell-prompt nil :foreground "turquoise1")
-     (add-hook 'eshell-mode-hook ;; for some reason this needs to be a hook
-               '(lambda () (define-key eshell-mode-map "\C-a" 'eshell-bol)))
-     (setq eshell-cmpl-cycle-completions nil)
+   '(progn
+      (require 'em-prompt)
+      (require 'em-term)
+      (require 'em-cmpl)
+      (setenv "PAGER" "cat")
+;; ;     (set-face-attribute 'eshell-prompt nil :foreground "turquoise1")
+;;      (add-hook 'eshell-mode-hook ;; for some reason this needs to be a hook
+;;                '(lambda () (define-key eshell-mode-map "\C-a" 'eshell-bol)))
+ 
+      (add-to-list 'eshell-visual-commands "ssh")
+      (add-to-list 'eshell-visual-commands "tail")
+      (add-to-list 'eshell-command-completions-alist
+                   '("gunzip" "gz\\'"))
+      (add-to-list 'eshell-command-completions-alist
+                   '("tar" "\\(\\.tar|\\.tgz\\|\\.tar\\.gz\\)\\'"))))
 
-     ;; TODO: submit these via M-x report-emacs-bug
-     (add-to-list 'eshell-visual-commands "ssh")
-     (add-to-list 'eshell-visual-commands "tail")
-     (add-to-list 'eshell-command-completions-alist
-                  '("gunzip" "gz\\'"))
-     (add-to-list 'eshell-command-completions-alist
-                  '("tar" "\\(\\.tar|\\.tgz\\|\\.tar\\.gz\\)\\'"))))
+;; ;;;###autoload
+;; (when (not (functionp 'eshell/rgrep))
+;;   (defun eshell/rgrep (&rest args)
+;;     "Use Emacs grep facility instead of calling external grep."
+;;     (eshell-grep "rgrep" args t)))
 
-;;;###autoload
-(defun eshell/cds ()
-  "Change directory to the project's root."
-  (eshell/cd (locate-dominating-file default-directory "src")))
+;; ;;;###autoload
+;; (defun eshell/extract (file)
+;;   (let ((command (some (lambda (x)
+;;                          (if (string-match-p (car x) file)
+;;                              (cadr x)))
+;;                        '((".*\.tar.bz2" "tar xjf")
+;;                          (".*\.tar.gz" "tar xzf")
+;;                          (".*\.bz2" "bunzip2")
+;;                          (".*\.rar" "unrar x")
+;;                          (".*\.gz" "gunzip")
+;;                          (".*\.tar" "tar xf")
+;;                          (".*\.tbz2" "tar xjf")
+;;                          (".*\.tgz" "tar xzf")
+;;                          (".*\.zip" "unzip")
+;;                          (".*\.Z" "uncompress")
+;;                          (".*" "echo 'Could not extract the file:'")))))
+;;     (eshell-command-result (concat command " " file))))
 
-;;;###autoload
-(defun eshell/cdl ()
-  "Change directory to the project's root."
-  (eshell/cd (locate-dominating-file default-directory "lib")))
+;; (defface esk-eshell-error-prompt-face
+;;   '((((class color) (background dark)) (:foreground "red" :bold t))
+;;     (((class color) (background light)) (:foreground "red" :bold t)))
+;;   "Face for nonzero prompt results"
+;;   :group 'eshell-prompt)
 
-;;;###autoload
-(defun eshell/cdg ()
-  "Change directory to the project's root."
-  (eshell/cd (locate-dominating-file default-directory ".git")))
+;; (add-hook 'eshell-after-prompt-hook
+;;           (defun esk-eshell-exit-code-prompt-face ()
+;;             (when (and eshell-last-command-status
+;;                        (not (zerop eshell-last-command-status)))
+;;               (let ((inhibit-read-only t))
+;;                 (add-text-properties
+;;                  (save-excursion (beginning-of-line) (point)) (point-max)
+;;                  '(face esk-eshell-error-prompt-face))))))
 
-;; these two haven't made it upstream yet
-;;;###autoload
-(when (not (functionp 'eshell/find))
-  (defun eshell/find (dir &rest opts)
-    (find-dired dir (mapconcat (lambda (arg)
-                                 (if (get-text-property 0 'escaped arg)
-                                     (concat "\"" arg "\"")
-                                   arg))
-                               opts " "))))
+;; (defun esk-eshell-in-dir (&optional prompt)
+;;   "Change the directory of an existing eshell to the directory of the file in
+;; the current buffer or launch a new eshell if one isn't running. If the
+;; current buffer does not have a file (e.g., a *scratch* buffer) launch or raise
+;; eshell, as appropriate. Given a prefix arg, prompt for the destination
+;; directory."
+;;   (interactive "P")
+;;   (let* ((name (buffer-file-name))
+;;          (dir (cond (prompt (read-directory-name "Directory: " nil nil t))
+;;                     (name (file-name-directory name))
+;;                     (t nil)))
+;;          (buffers (delq nil (mapcar (lambda (buf)
+;;                                       (with-current-buffer buf
+;;                                         (when (eq 'eshell-mode major-mode)
+;;                                           (buffer-name))))
+;;                                     (buffer-list))))
+;;          (buffer (cond ((eq 1 (length buffers)) (first buffers))
+;;                        ((< 1 (length buffers)) (ido-completing-read
+;;                                                 "Eshell buffer: " buffers nil t
+;;                                                 nil nil (first buffers)))
+;;                        (t (eshell)))))
+;;     (with-current-buffer buffer
+;;       (when dir
+;;         (eshell/cd (list dir))
+;;         (eshell-send-input))
+;;       (end-of-buffer)
+;;       (pop-to-buffer buffer))))
 
-;;;###autoload
-(when (not (functionp 'eshell/rgrep))
-  (defun eshell/rgrep (&rest args)
-    "Use Emacs grep facility instead of calling external grep."
-    (eshell-grep "rgrep" args t)))
-
-;;;###autoload
-(defun eshell/extract (file)
-  (let ((command (some (lambda (x)
-                         (if (string-match-p (car x) file)
-                             (cadr x)))
-                       '((".*\.tar.bz2" "tar xjf")
-                         (".*\.tar.gz" "tar xzf")
-                         (".*\.bz2" "bunzip2")
-                         (".*\.rar" "unrar x")
-                         (".*\.gz" "gunzip")
-                         (".*\.tar" "tar xf")
-                         (".*\.tbz2" "tar xjf")
-                         (".*\.tgz" "tar xzf")
-                         (".*\.zip" "unzip")
-                         (".*\.Z" "uncompress")
-                         (".*" "echo 'Could not extract the file:'")))))
-    (eshell-command-result (concat command " " file))))
-
-(defface esk-eshell-error-prompt-face
-  '((((class color) (background dark)) (:foreground "red" :bold t))
-    (((class color) (background light)) (:foreground "red" :bold t)))
-  "Face for nonzero prompt results"
-  :group 'eshell-prompt)
-
-(add-hook 'eshell-after-prompt-hook
-          (defun esk-eshell-exit-code-prompt-face ()
-            (when (and eshell-last-command-status
-                       (not (zerop eshell-last-command-status)))
-              (let ((inhibit-read-only t))
-                (add-text-properties
-                 (save-excursion (beginning-of-line) (point)) (point-max)
-                 '(face esk-eshell-error-prompt-face))))))
-
-(defun esk-eshell-in-dir (&optional prompt)
-  "Change the directory of an existing eshell to the directory of the file in
-the current buffer or launch a new eshell if one isn't running. If the
-current buffer does not have a file (e.g., a *scratch* buffer) launch or raise
-eshell, as appropriate. Given a prefix arg, prompt for the destination
-directory."
-  (interactive "P")
-  (let* ((name (buffer-file-name))
-         (dir (cond (prompt (read-directory-name "Directory: " nil nil t))
-                    (name (file-name-directory name))
-                    (t nil)))
-         (buffers (delq nil (mapcar (lambda (buf)
-                                      (with-current-buffer buf
-                                        (when (eq 'eshell-mode major-mode)
-                                          (buffer-name))))
-                                    (buffer-list))))
-         (buffer (cond ((eq 1 (length buffers)) (first buffers))
-                       ((< 1 (length buffers)) (ido-completing-read
-                                                "Eshell buffer: " buffers nil t
-                                                nil nil (first buffers)))
-                       (t (eshell)))))
-    (with-current-buffer buffer
-      (when dir
-        (eshell/cd (list dir))
-        (eshell-send-input))
-      (end-of-buffer)
-      (pop-to-buffer buffer))))
 
 (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode); Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
 
@@ -546,18 +524,30 @@ directory."
                             (yas-minor-mode -1)))
 
 ;; Dired
+(require 'dired+)
 ;; dired - reuse current buffer by pressing 'a'
 (put 'dired-find-alternate-file 'disabled nil)
 ;; always delete and copy recursively
 (setq dired-recursive-deletes 'always)
 (setq dired-recursive-copies 'always)
+(setq dired-listing-switches "-alhF")
+;; Handle zip compression
+(eval-after-load "dired-aux"
+  '(add-to-list 'dired-compress-file-suffixes
+                '("\\.zip\\'" ".zip" "unzip")))
+;; I use ibuffer for my C-x C-b binding instead of list-buffers. This
+;; has the ability to group buffers. I tend to wind up with a lot of
+;; dired buffers, so it's nice to group them together:
+(setq ibuffer-saved-filter-groups
+      (quote (("default"
+               ("dired" (mode . dired-mode))))))
 
 ;; if there is a dired buffer displayed in the next window, use its
 ;; current subdir, instead of the current subdir of this dired buffer
 (setq dired-dwim-target t)
 
 ;; enable some really cool extensions like C-x C-j(dired-jump)
-(require 'dired-x)
+;(require 'dired-x)
 
 ;; ediff 
 (require 'ediff)
@@ -569,6 +559,8 @@ directory."
 ;;      (set-face-foreground 'diff-added "green4")
 ;;      (set-face-foreground 'diff-removed "red3")))
 
+;; magit
+(global-set-key (kbd "C-x g") 'magit-status)
 ;; (eval-after-load 'magit
 ;;   '(progn
 ;;      (set-face-foreground 'magit-diff-add "green4")
@@ -590,8 +582,9 @@ directory."
 ;; enable winner-mode to manage window configurations
 (winner-mode +1)
 
-;; BSBufferSelection
-(global-set-key (kbd "C-x C-b") 'bs-show)
+;; IBuffer for buffer lsit
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+(autoload 'ibuffer "ibuffer" "List buffers." t)
 
 ;; LaTeX
 ;; use pdflatex
