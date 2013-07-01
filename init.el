@@ -280,6 +280,8 @@ Missing packages are installed automatically."
 (desktop-save-mode 1)
 (setq desktop-dirname my-savefile-dir)
 
+(setq-default fill-column 80)
+
 ;; Recent files mode
 (require 'recentf)
 (recentf-mode 1)
@@ -595,11 +597,11 @@ Missing packages are installed automatically."
              (define-key LaTeX-mode-map "\C-c!" 'TeX-next-error)))
 
 (add-hook 'TeX-mode-hook 'flyspell-mode); Enable Flyspell mode for TeX modes such as AUCTeX. Highlights all misspelled words.
-(setq ispell-dictionary "english"); Default dictionary. To change do M-x ispell-change-dictionary RET.
+(setq ispell-dictionary "american"); Default dictionary. To change do M-x ispell-change-dictionary RET.
 (add-hook 'TeX-language-de-hook
       (lambda () (ispell-change-dictionary "german")))
 (add-hook 'TeX-language-en-hook
-      (lambda () (ispell-change-dictionary "english")))
+      (lambda () (ispell-change-dictionary "american")))
 ; Flyspell-babel not working
 ; (autoload 'flyspell-babel-setup "flyspell-babel")
 ; (add-hook 'latex-mode-hook 'flyspell-babel-setup)
