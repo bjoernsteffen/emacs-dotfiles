@@ -3,3 +3,6 @@
 /elpa
 /savefile
 /var
+/.emacs.desktop
+/.emacs.desktop.lock
+/url/cookies
