@@ -226,13 +226,11 @@ Missing packages are installed automatically."
 (set-default 'imenu-auto-rescan t)
 
 ;; mode line settings
-;(line-number-mode t)
-(column-number-mode t)
-;(size-indication-mode t)
 (global-visual-line-mode 1); Proper line wrapping
 (global-hl-line-mode 1); Highlight current row
-(global-linum-mode t) ; line numbers
-;(setq column-number-mode t)
+;(global-linum-mode t) ; line numbers
+(column-number-mode t)
+
 ; (global-show-newlines-mode t)
 ; (indicate-buffer-boundaries 'left)
 
@@ -598,10 +596,10 @@ Missing packages are installed automatically."
 
 (add-hook 'TeX-mode-hook 'flyspell-mode); Enable Flyspell mode for TeX modes such as AUCTeX. Highlights all misspelled words.
 (setq ispell-dictionary "american"); Default dictionary. To change do M-x ispell-change-dictionary RET.
-(add-hook 'TeX-language-de-hook
-      (lambda () (ispell-change-dictionary "german")))
-(add-hook 'TeX-language-en-hook
-      (lambda () (ispell-change-dictionary "american")))
+; (add-hook 'TeX-language-de-hook
+;       (lambda () (ispell-change-dictionary "german")))
+; (add-hook 'TeX-language-en-hook
+;       (lambda () (ispell-change-dictionary "american")))
 ; Flyspell-babel not working
 ; (autoload 'flyspell-babel-setup "flyspell-babel")
 ; (add-hook 'latex-mode-hook 'flyspell-babel-setup)
@@ -636,6 +634,7 @@ Missing packages are installed automatically."
              '("lemma" LaTeX-env-label)
              '("theorem" LaTeX-env-label)
              '("observation" LaTeX-env-label)
+             '("corollary" LaTeX-env-label)
              '("algorithm" LaTeX-env-label)
              )))
 (setq reftex-ref-style-alist
@@ -647,6 +646,7 @@ Missing packages are installed automatically."
           ("lemma" ?l "lem:" "~\\ref{%s}" t ("lemma" "lem."))
           ("theorem" ?h "thr:" "~\\ref{%s}" t ("theorem" "th."))
           ("observation" ?o "obs:" "~\\ref{%s}" t ("observation" "obs."))
+          ("corollary" ?c "cor:" "~\\ref{%s}" t ("corollary" "cor."))
           ("algorithm" ?a "alg:" "~\\ref{%s}" t ("algorithm" "alg."))
           ))
 
