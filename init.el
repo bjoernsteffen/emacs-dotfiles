@@ -593,6 +593,10 @@ Missing packages are installed automatically."
 (autoload 'ibuffer "ibuffer" "List buffers." t)
 
 ;; LaTeX
+(setq TeX-auto-save t)
+(setq TeX-parse-self t)
+(setq-default TeX-master nil)
+
 ;; use pdflatex
 (setq TeX-PDF-mode t)
 (setq TeX-style-local "style/")
