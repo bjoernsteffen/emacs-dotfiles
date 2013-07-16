@@ -645,10 +645,33 @@ Missing packages are installed automatically."
              '("theorem" LaTeX-env-label)
              '("observation" LaTeX-env-label)
              '("corollary" LaTeX-env-label)
-             '("algorithm" LaTeX-env-label)
-             )))
-(setq reftex-ref-style-alist
-      '(("Default" t (("\\ref" 13) ("\\pageref" 112))) ("Cleveref" "cleveref" (("\\cref" 99) ("\\Cref" 67) ("\\namecref" 110) ("\\nameCref" 78) ("\\labelcref" 108))) ("Varioref" "varioref" (("\\vref" 118) ("\\vpageref" 103) ("\\Vref" 86) ("\\Ref" 82))) ("Fancyref" "fancyref" (("\\fref" 102) ("\\Fref" 70))) ("Hyperref" "hyperref" (("\\autoref" 97) ("\\autopageref" 117)))))
+             '("algorithm" LaTeX-env-label) )
+            (TeX-add-symbols
+             '("cref" TeX-arg-ref)
+             '("Cref" TeX-arg-ref)
+             '("labelcref" TeX-arg-ref)
+             '("namecref" TeX-arg-ref)
+             '("nameCref" TeX-arg-ref)
+             '("cpageref" TeX-arg-ref)
+             '("Cpageref" TeX-arg-ref))))
+
+(eval-after-load
+    "latex"
+  '(TeX-add-style-hook
+    "cleveref"
+    (lambda ()
+      (if (boundp 'reftex-ref-style-alist)
+          (add-to-list
+           'reftex-ref-style-alist
+           '("Cleveref" "cleveref"
+             (("\\cref" ?c)
+              ("\\Cref" ?C)
+              ("\\namecref" ?n)
+              ("\\nameCref" ?N)
+              ("\\labelcref" ?l)
+              ("\\cpageref" ?d)
+              ("\\Cpageref" ?D) )))))))
+
 (setq reftex-ref-style-default-list '("Default" "Cleveref"))
 
 (setq reftex-label-alist
@@ -688,6 +711,10 @@ Missing packages are installed automatically."
              ("Cref" "*{")
              ("namecref" "{")
              ("labelcref" "{")
+             ("namecref" "{")
+             ("nameCref" "{")
+             ("cpageref" "{")
+             ("Cpageref" "{")
              ;; subcaption
              ("subref" "{")
              ;; biblatex
