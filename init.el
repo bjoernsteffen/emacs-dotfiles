@@ -394,9 +394,6 @@ Missing packages are installed automatically."
   ;; Start a new eshell even if one is active.
   (global-set-key (kbd "C-x M") (lambda () (interactive) (eshell t)))
 
-  ;; Start a regular shell if you prefer that.
-  (global-set-key (kbd "C-x C-m") 'shell)
-
   ;; Help should search more than just commands
   (define-key 'help-command "a" 'apropos)
 
@@ -677,7 +674,7 @@ Missing packages are installed automatically."
 (setq reftex-label-alist
         '(("definition" ?d "def:"  "~\\ref{%s}" t ("definition" "def."))
           ("lemma" ?l "lem:" "~\\ref{%s}" t ("lemma" "lem."))
-          ("theorem" ?h "thr:" "~\\ref{%s}" t ("theorem" "th."))
+          ("theorem" ?h "thm:" "~\\ref{%s}" t ("theorem" "th."))
           ("observation" ?o "obs:" "~\\ref{%s}" t ("observation" "obs."))
           ("corollary" ?c "cor:" "~\\ref{%s}" t ("corollary" "cor."))
           ("algorithm" ?a "alg:" "~\\ref{%s}" t ("algorithm" "alg."))
