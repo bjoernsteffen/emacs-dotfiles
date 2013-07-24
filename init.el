@@ -593,6 +593,7 @@ Missing packages are installed automatically."
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
 (setq-default TeX-master nil)
+(setq TeX-save-query nil)
 
 ;; use pdflatex
 (setq TeX-PDF-mode t)
