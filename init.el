@@ -304,7 +304,7 @@ Missing packages are installed automatically."
 ;; Backup Files
 (setq make-backup-files t
       delete-old-versions t
-      kept-new-versions 2
+      kept-new-versions 6
       kept-old-versions 1
       version-control t
       backup-by-copying t
@@ -589,6 +589,18 @@ Missing packages are installed automatically."
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 (autoload 'ibuffer "ibuffer" "List buffers." t)
 
+;; Highlight Comment Annotations
+(defun font-lock-comment-annotations ()
+  "Highlight a bunch of well known comment annotations.
+
+This functions should be added to the hooks of major modes for programming."
+  (font-lock-add-keywords
+   nil '(("\\<\\(FIX\\(ME\\)?\\|TODO\\|OPTIMIZE\\|HACK\\|REFACTOR\\):"
+          1 font-lock-warning-face t))))
+
+(add-hook 'prog-mode-hook 'font-lock-comment-annotations)
+(add-hook 'text-mode-hook 'font-lock-comment-annotations)
+
 ;; LaTeX
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
@@ -616,7 +628,8 @@ Missing packages are installed automatically."
 ; (add-to-list 'flyspell-babel-environment-alist ("hyphenrules" "hyphenrules"))
 ;(setq LaTeX-babel-hyphen nil); Disable language-specific hyphen insertion.
 
-(add-hook 'LaTeX-mode-hook 'turn-on-auto-fill)
+(add-hook 'TeX-mode-hook 'font-lock-comment-annotations)
+(add-hook 'TeX-mode-hook 'turn-on-auto-fill)
 
 (add-hook 'TeX-mode-hook
       (lambda () (TeX-fold-mode 1))); Automatically activate TeX-fold-mode.
@@ -648,8 +661,13 @@ Missing packages are installed automatically."
              '("cref" TeX-arg-ref)
              '("Cref" TeX-arg-ref)
              '("labelcref" TeX-arg-ref)
+             '("labelcpageref" TeX-arg-ref)
              '("namecref" TeX-arg-ref)
              '("nameCref" TeX-arg-ref)
+             '("namecrefs" TeX-arg-ref)
+             '("nameCrefs" TeX-arg-ref)
+             '("lcnamecref" TeX-arg-ref)
+             '("lcnamecrefs" TeX-arg-ref)
              '("cpageref" TeX-arg-ref)
              '("Cpageref" TeX-arg-ref))))
 
@@ -709,8 +727,13 @@ Missing packages are installed automatically."
              ("Cref" "*{")
              ("namecref" "{")
              ("labelcref" "{")
+             ("labelcpageref" "{")
              ("namecref" "{")
              ("nameCref" "{")
+             ("namecrefs" "{")
+             ("nameCrefs" "{")
+             ("lcnamecref" "{")
+             ("lcnamecrefs" "{")
              ("cpageref" "{")
              ("Cpageref" "{")
              ;; subcaption
