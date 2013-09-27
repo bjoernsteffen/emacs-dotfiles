@@ -669,7 +669,8 @@ This functions should be added to the hooks of major modes for programming."
              '("lcnamecref" TeX-arg-ref)
              '("lcnamecrefs" TeX-arg-ref)
              '("cpageref" TeX-arg-ref)
-             '("Cpageref" TeX-arg-ref))))
+             '("Cpageref" TeX-arg-ref)
+             '("subref" TeX-arg-ref))))
 
 (eval-after-load
     "latex"
@@ -688,7 +689,18 @@ This functions should be added to the hooks of major modes for programming."
               ("\\cpageref" ?d)
               ("\\Cpageref" ?D) )))))))
 
-(setq reftex-ref-style-default-list '("Default" "Cleveref"))
+(eval-after-load
+    "latex"
+  '(TeX-add-style-hook
+    "subcaption"
+    (lambda ()
+      (if (boundp 'reftex-ref-style-alist)
+          (add-to-list
+           'reftex-ref-style-alist
+           '("Subcaption" "subcaption"
+             (("\\subref" ?s))))))))
+
+(setq reftex-ref-style-default-list '("Default" "Cleveref" "Subcaption"))
 
 (setq reftex-label-alist
         '(("definition" ?d "def:"  "~\\ref{%s}" t ("definition" "def."))
@@ -850,6 +862,11 @@ This functions should be added to the hooks of major modes for programming."
 
 ;; Enable TikZ Syntax highlightning
 ;(load "~/.emacs.d/auc-tikz-struct")
+
+;; Maxima
+(push "/usr/local/Cellar/maxima/5.28.0/share/maxima/5.28.0/emacs" load-path)
+(autoload 'imaxima "imaxima" "Maxima frontend" t)
+(autoload 'imath "imath" "Interactive Math mode" t)
 
 ;; Start Emacs Server
 (server-start)
