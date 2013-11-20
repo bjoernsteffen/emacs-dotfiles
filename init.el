@@ -589,6 +589,7 @@ Missing packages are installed automatically."
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 (autoload 'ibuffer "ibuffer" "List buffers." t)
 
+;; hi-lock-mode
 (global-hi-lock-mode 1)
 (setq hi-lock-file-patterns-policy #'(lambda (dummy) t))
 
