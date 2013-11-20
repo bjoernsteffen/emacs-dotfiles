@@ -589,6 +589,9 @@ Missing packages are installed automatically."
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 (autoload 'ibuffer "ibuffer" "List buffers." t)
 
+(global-hi-lock-mode 1)
+(setq hi-lock-file-patterns-policy #'(lambda (dummy) t))
+
 ;; Highlight Comment Annotations
 (defun font-lock-comment-annotations ()
   "Highlight a bunch of well known comment annotations.
@@ -754,20 +757,20 @@ This functions should be added to the hooks of major modes for programming."
              ("printbibliography" "[{")
              ("addbibresource" "[{")
              ;; Standard commands
-             ;; ("cite" "[{")
-             ("Cite" "[{")
-             ("parencite" "[{")
-             ("Parencite" "[{")
-             ("footcite" "[{")
-             ("footcitetext" "[{")
+             ("cite" "[[{")
+             ("Cite" "[[{")
+             ("parencite" "[[{")
+             ("Parencite" "[[{")
+             ("footcite" "[[{")
+             ("footcitetext" "[[{")
              ;; Style-specific commands
-             ("textcite" "[{")
-             ("Textcite" "[{")
-             ("smartcite" "[{")
-             ("Smartcite" "[{")
-             ("cite*" "[{")
-             ("parencite*" "[{")
-             ("supercite" "[{")
+             ("textcite" "[[{")
+             ("Textcite" "[[{")
+             ("smartcite" "[[{")
+             ("Smartcite" "[[{")
+             ("cite*" "[[{")
+             ("parencite*" "[[{")
+             ("supercite" "{")
              ;; Qualified citation lists
              ("cites" "[{")
 	     ("Cites" "[{")
@@ -781,22 +784,22 @@ This functions should be added to the hooks of major modes for programming."
 	     ("Textcites" "[{")
 	     ("supercites" "[{")
 	     ;; Style-independent commands
-	     ("autocite" "[{")
-	     ("Autocite" "[{")
-	     ("autocite*" "[{")
-	     ("Autocite*" "[{")
+	     ("autocite" "[[{")
+	     ("Autocite" "[[{")
+	     ("autocite*" "[[{")
+	     ("Autocite*" "[[{")
 	     ("autocites" "[{")
 	     ("Autocites" "[{")
 	     ;; Text commands
-	     ("citeauthor" "[{")
-	     ("Citeauthor" "[{")
-	     ("citetitle" "[{")
-	     ("citetitle*" "[{")
-	     ("citeyear" "[{")
-	     ("citedate" "[{")
-	     ("citeurl" "[{")
+	     ("citeauthor" "[[{")
+	     ("Citeauthor" "[[{")
+	     ("citetitle" "[[{")
+	     ("citetitle*" "[[{")
+	     ("citeyear" "[[{")
+	     ("citedate" "[[{")
+	     ("citeurl" "[[{")
 	     ;; Special commands
-	     ("fullcite" "[{")))
+	     ("fullcite" "[[{")))
 
      (setq font-latex-match-textual-keywords
 	   '(
