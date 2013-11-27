@@ -200,6 +200,8 @@ Missing packages are installed automatically."
 (ido-mode t)
 (ido-everywhere t)
 (ido-ubiquitous-mode t)
+(setq ido-create-new-buffer 'always)
+
 
 ;; smex, remember recently and most frequently used commands
 (require 'smex)
@@ -589,6 +591,10 @@ Missing packages are installed automatically."
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 (autoload 'ibuffer "ibuffer" "List buffers." t)
 
+(setq kill-buffer-query-functions
+  (remq 'process-kill-buffer-query-function
+        kill-buffer-query-functions))
+
 ;; hi-lock-mode
 (global-hi-lock-mode 1)
 (setq hi-lock-file-patterns-policy #'(lambda (dummy) t))
@@ -871,6 +877,9 @@ This functions should be added to the hooks of major modes for programming."
 (push "/usr/local/Cellar/maxima/5.28.0/share/maxima/5.28.0/emacs" load-path)
 (autoload 'imaxima "imaxima" "Maxima frontend" t)
 (autoload 'imath "imath" "Interactive Math mode" t)
+
+;; Expand Region
+(global-set-key (kbd "C-=") 'er/expand-region)
 
 ;; Start Emacs Server
 (server-start)
