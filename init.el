@@ -16,9 +16,9 @@
   '(ace-jump-mode ack-and-a-half dash diminish elisp-slime-nav
     expand-region flycheck gist
     git-commit-mode gitconfig-mode gitignore-mode
-    ido-ubiquitous dired+
+    ido-ubiquitous dired+ diff-hl
     auctex
-    magit melpa rainbow-mode
+    magit melpa rainbow-mode smart-mode-line
     smex volatile-highlights yasnippet zenburn-theme)
   "A list of packages to ensure are installed at launch.")
 
@@ -170,10 +170,11 @@ Missing packages are installed automatically."
 
 
 ;; nice scrolling
-(setq scroll-margin 5)
+(setq scroll-margin 5
+      redisplay-dont-pause t)
 ;      scroll-conservatively 100000
 ;      scroll-preserve-screen-position 1)
-
+      
 (setq standard-indent 2)
 
 
@@ -242,8 +243,16 @@ Missing packages are installed automatically."
 
 ;; make the fringe (gutter) smaller
 ;; the argument is a width in pixels (the default is 8)
-(if (fboundp 'fringe-mode)
-    (fringe-mode 4))
+;; (if (fboundp 'fringe-mode)
+;;     (fringe-mode 4))
+
+(require 'diff-hl)
+(global-diff-hl-mode 1)
+(global diff-hl-dired-mode 1)
+(defadvice magit-quit-session
+  (after update-diff-hl activate)
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer (diff-hl-update))))
 
 ;; use zenburn as the default theme
 (load-theme 'zenburn t)
@@ -881,6 +890,10 @@ This functions should be added to the hooks of major modes for programming."
 
 ;; Expand Region
 (global-set-key (kbd "C-=") 'er/expand-region)
+
+
+(require 'smart-mode-line)
+(sml/setup)
 
 ;; Start Emacs Server
 (server-start)
