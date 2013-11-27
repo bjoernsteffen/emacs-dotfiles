@@ -596,6 +596,9 @@ Missing packages are installed automatically."
 ;; hi-lock-mode
 (global-hi-lock-mode 1)
 (setq hi-lock-file-patterns-policy #'(lambda (dummy) t))
+(defadvice hi-lock-set-pattern (around use-overlays activate)
+  (let ((font-lock-fontified nil))
+    ad-do-it))
 
 ;; Highlight Comment Annotations
 (defun font-lock-comment-annotations ()
