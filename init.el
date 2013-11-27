@@ -174,8 +174,6 @@ Missing packages are installed automatically."
 ;      scroll-conservatively 100000
 ;      scroll-preserve-screen-position 1)
 
-;; Highlight matching parentheses when the point is on them.
-(show-paren-mode 1)
 (setq standard-indent 2)
 
 
