@@ -248,7 +248,6 @@ Missing packages are installed automatically."
 
 (require 'diff-hl)
 (global-diff-hl-mode 1)
-(global diff-hl-dired-mode 1)
 (defadvice magit-quit-session
   (after update-diff-hl activate)
   (dolist (buffer (buffer-list))
@@ -893,6 +892,7 @@ This functions should be added to the hooks of major modes for programming."
 
 
 (require 'smart-mode-line)
+(setq sml/theme 'respectful)
 (sml/setup)
 
 ;; Start Emacs Server
