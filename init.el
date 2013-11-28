@@ -243,15 +243,15 @@ Missing packages are installed automatically."
 
 ;; make the fringe (gutter) smaller
 ;; the argument is a width in pixels (the default is 8)
-;; (if (fboundp 'fringe-mode)
-;;     (fringe-mode 4))
+(if (fboundp 'fringe-mode)
+    (fringe-mode 4))
+(setq-default indicate-buffer-boundaries 'left)
+(setq-default indicate-empty-lines +1)
 
 (require 'diff-hl)
 (global-diff-hl-mode 1)
-(defadvice magit-quit-session
-  (after update-diff-hl activate)
-  (dolist (buffer (buffer-list))
-    (with-current-buffer buffer (diff-hl-update))))
+(add-hook 'magit-refresh-file-buffer-hook 'diff-hl-update)
+
 
 ;; use zenburn as the default theme
 (load-theme 'zenburn t)
@@ -360,13 +360,6 @@ Missing packages are installed automatically."
       calendar-standard-time-zone-name "CET"
       calendar-daylight-time-zone-name "CEST")
 
-
-;; from emacs-starter-kid
-(defun esk-add-watchwords ()
-  (font-lock-add-keywords
-   nil '(("\\<\\(FIX\\(ME\\)?\\|TODO\\|HACK\\|REFACTOR\\|NOCOMMIT\\)"
-          1 font-lock-warning-face t))))
-(add-hook 'prog-mode-hook 'esk-add-watchwords)
 
 ;; Key bindings
 (progn
@@ -719,6 +712,8 @@ This functions should be added to the hooks of major modes for programming."
            '("Subcaption" "subcaption"
              (("\\subref" ?s))))))))
 
+             
+
 (setq reftex-ref-style-default-list '("Default" "Cleveref" "Subcaption"))
 
 (setq reftex-label-alist
@@ -892,8 +887,10 @@ This functions should be added to the hooks of major modes for programming."
 
 
 (require 'smart-mode-line)
-(setq sml/theme 'respectful)
+(setq sml/theme 'dark)
 (sml/setup)
+
+(load custom-file)
 
 ;; Start Emacs Server
 (server-start)
