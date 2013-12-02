@@ -130,6 +130,8 @@ Missing packages are installed automatically."
       oddmuse-directory (concat user-emacs-directory "oddmuse")
       save-place-file (concat user-emacs-directory "places"))
 
+(set-face-attribute 'default nil :font "Monaco-12")
+
 ; meaningful names for buffers with the same name
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'forward)
@@ -156,6 +158,10 @@ Missing packages are installed automatically."
 ;; use shift + arrow keys to switch between visible buffers
 (require 'windmove)
 (windmove-default-keybindings)
+
+;; CUA selection mode for tables
+(cua-selection-mode t)
+(setq cua-auto-tabify-rectangles nil)
 
 
 ;; Mac Path
