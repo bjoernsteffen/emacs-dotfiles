@@ -571,10 +571,24 @@ Missing packages are installed automatically."
 
 ;; magit
 (global-set-key (kbd "C-x g") 'magit-status)
-;; (eval-after-load 'magit
-;;   '(progn
-;;      (set-face-foreground 'magit-diff-add "green4")
-;;      (set-face-foreground 'magit-diff-del "red3")))
+(setq
+ ;; use ido to look for branches
+ magit-completing-read-function 'magit-ido-completing-read
+ ;; don't put "origin-" in front of new branch names by default
+ magit-default-tracking-name-function 'magit-default-tracking-name-branch-only
+ ;; open magit status in same window as current buffer
+ ;magit-status-buffer-switch-function 'switch-to-buffer
+ ;; highlight word/letter changes in hunk diffs
+ magit-diff-refine-hunk t
+ ;; ask me if I want to include a revision when rewriting
+ magit-rewrite-inclusive 'ask
+ ;; ask me to save buffers
+ magit-save-some-buffers t
+ ;; pop the process buffer if we're taking a while to complete
+ magit-process-popup-time 10
+ ;; ask me if I want a tracking upstream
+ magit-set-upstream-on-push 'askifnotset
+ )
 
 ;; clean up obsolete buffers automatically
 (require 'midnight)
