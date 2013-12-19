@@ -831,7 +831,7 @@ This functions should be added to the hooks of major modes for programming."
 	     ("textins*" "{")
 	     ;; caption
 	     ("subcaption" "[{")
-	     ("subcaptionbox" "*[{")
+	     ("subcaptionbox" "*[{[[{")
 	     ("captionof" "*[{{")))
 
      (setq font-latex-match-variable-keywords
