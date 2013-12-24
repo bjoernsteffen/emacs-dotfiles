@@ -241,6 +241,8 @@ Missing packages are installed automatically."
 ;; mode line settings
 (global-visual-line-mode 1); Proper line wrapping
 (setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow))
+;(setq-default truncate-lines t)
+
 (global-hl-line-mode 1); Highlight current row
 ;(global-linum-mode t) ; line numbers
 (column-number-mode t)
