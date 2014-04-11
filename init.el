@@ -16,7 +16,7 @@
   '(ace-jump-mode ack-and-a-half dash diminish elisp-slime-nav
     expand-region flycheck gist
     git-commit-mode gitconfig-mode gitignore-mode
-    ido-ubiquitous dired+ diff-hl
+    ido-ubiquitous dired+ diff-hl outline-magic
     auctex
     magit melpa rainbow-mode smart-mode-line
     smex volatile-highlights yasnippet zenburn-theme)
@@ -258,7 +258,7 @@ Missing packages are installed automatically."
 (setq-default indicate-empty-lines +1)
 
 (require 'diff-hl)
-(global-diff-hl-mode 1)
+(global-diff-hl-mode)
 (add-hook 'magit-refresh-file-buffer-hook 'diff-hl-update)
 
 
@@ -320,6 +320,7 @@ Missing packages are installed automatically."
 
 ;; Backup Files
 (setq make-backup-files t
+      vc-make-backup-files t
       delete-old-versions t
       kept-new-versions 6
       kept-old-versions 1
@@ -530,7 +531,7 @@ Missing packages are installed automatically."
 ;; load yasnippet
 (require 'yasnippet)
 (add-to-list 'yas-snippet-dirs my-snippets-dir)
-(yas-global-mode 1)
+;(yas-global-mode 1)
 
 ;; term-mode does not play well with yasnippet
 (add-hook 'term-mode-hook (lambda ()
@@ -636,6 +637,16 @@ This functions should be added to the hooks of major modes for programming."
 (add-hook 'prog-mode-hook 'font-lock-comment-annotations)
 (add-hook 'text-mode-hook 'font-lock-comment-annotations)
 
+
+(add-hook 'outline-mode-hook
+          (lambda ()
+            (require 'outline-cycle)))
+
+(add-hook 'outline-minor-mode-hook
+          (lambda ()
+            (require 'outline-magic)
+            (define-key outline-minor-mode-map [(control tab)] 'outline-cycle)))
+
 ;; LaTeX
 (setq TeX-auto-save t)
 (setq TeX-parse-self t)
@@ -645,6 +656,11 @@ This functions should be added to the hooks of major modes for programming."
 ;; use pdflatex
 (setq TeX-PDF-mode t)
 (setq TeX-style-local "style/")
+(defun my/LaTeX-mode-hook ()
+  (local-set-key [remap next-error] nil)
+  (local-set-key [remap previous-error] nil))
+
+(add-hook 'LaTeX-mode-hook 'my/LaTeX-mode-hook)
 (add-hook 'LaTeX-mode-hook
           '(lambda ()
              (define-key LaTeX-mode-map "\C-c!" 'TeX-next-error)))
@@ -848,7 +864,7 @@ This functions should be added to the hooks of major modes for programming."
 	     ("textins*" "{")
 	     ;; caption
 	     ("subcaption" "[{")
-	     ("subcaptionbox" "*[{[[{")
+	     ("subcaptionbox" "*[{[[")
 	     ("captionof" "*[{{")))
 
      (setq font-latex-match-variable-keywords
