@@ -259,7 +259,6 @@ Missing packages are installed automatically."
 
 (require 'diff-hl)
 (global-diff-hl-mode)
-(add-hook 'magit-refresh-file-buffer-hook 'diff-hl-update)
 
 
 ;; use zenburn as the default theme
@@ -749,7 +748,12 @@ This functions should be added to the hooks of major modes for programming."
           (add-to-list
            'reftex-ref-style-alist
            '("Subcaption" "subcaption"
-             (("\\subref" ?s))))))))
+             (("\\subref" ?s))))
+          (add-to-list
+           'reftex-label-alist
+           '("\subcaptionbox{}{}" ?f "fig:" "~\\ref{%s}" nil ("figure" "fig."))
+           )
+        ))))
 
              
 
@@ -758,9 +762,13 @@ This functions should be added to the hooks of major modes for programming."
 (setq reftex-label-alist
         '(("definition" ?d "def:"  "~\\ref{%s}" t ("definition" "def."))
           ("lemma" ?l "lem:" "~\\ref{%s}" t ("lemma" "lem."))
+          ("lemma*" ?l "lem:" "~\\ref{%s}" t ("lemma" "lem."))
           ("theorem" ?h "thm:" "~\\ref{%s}" t ("theorem" "th."))
+          ("theorem*" ?h "thm:" "~\\ref{%s}" t ("theorem" "th."))
           ("observation" ?o "obs:" "~\\ref{%s}" t ("observation" "obs."))
+          ("observation*" ?o "obs:" "~\\ref{%s}" t ("observation" "obs."))
           ("corollary" ?c "cor:" "~\\ref{%s}" t ("corollary" "cor."))
+          ("corollary*" ?c "cor:" "~\\ref{%s}" t ("corollary" "cor."))
           ("algorithm" ?a "alg:" "~\\ref{%s}" t ("algorithm" "alg."))
           ))
 
@@ -925,11 +933,10 @@ This functions should be added to the hooks of major modes for programming."
 (global-set-key (kbd "C-=") 'er/expand-region)
 
 
-(require 'smart-mode-line)
-(setq sml/theme 'dark)
-(sml/setup)
-
 (load custom-file)
+
+(sml/setup)
+(setq sml/theme 'dark)
 
 ;; Start Emacs Server
 (server-start)
