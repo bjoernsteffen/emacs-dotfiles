@@ -18,7 +18,7 @@
     git-commit-mode gitconfig-mode gitignore-mode
     ido-ubiquitous dired+ diff-hl outline-magic
     auctex
-    magit melpa rainbow-mode smart-mode-line
+    magit rainbow-mode smart-mode-line
     smex volatile-highlights yasnippet zenburn-theme)
   "A list of packages to ensure are installed at launch.")
 
@@ -637,14 +637,17 @@ This functions should be added to the hooks of major modes for programming."
 (add-hook 'text-mode-hook 'font-lock-comment-annotations)
 
 
-(add-hook 'outline-mode-hook
-          (lambda ()
-            (require 'outline-cycle)))
-
 (add-hook 'outline-minor-mode-hook
           (lambda ()
             (require 'outline-magic)
             (define-key outline-minor-mode-map [(control tab)] 'outline-cycle)))
+
+; use allout minor mode to have outlining everywhere.
+(allout-mode)
+
+;; Convenient printing
+(require 'printing)
+(pr-update-menus t)
 
 ;; LaTeX
 (setq TeX-auto-save t)
