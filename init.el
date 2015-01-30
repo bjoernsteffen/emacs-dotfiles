@@ -1,8 +1,11 @@
 ;; My Emacs Settings
 
 ; Size of Frame
-(add-to-list 'default-frame-alist '(height . 76))
+(add-to-list 'default-frame-alist '(height . 90))
 (add-to-list 'default-frame-alist '(width . 115))
+(add-to-list 'default-frame-alist '(top . 0))
+(add-to-list 'default-frame-alist '(left . 800))
+
 
 (require 'cl)
 (require 'package)
@@ -133,11 +136,12 @@ Missing packages are installed automatically."
 (set-face-attribute 'default nil :font "Monaco-12")
 
 ; meaningful names for buffers with the same name
-(require 'uniquify)
-(setq uniquify-buffer-name-style 'forward)
-(setq uniquify-separator "/")
-(setq uniquify-after-kill-buffer-p t) ; rename after killing uniquified
-(setq uniquify-ignore-buffers-re "^\\*") ; don't muck with special buffers
+; part of emacs 24.4
+;; (require 'uniquify)
+;; (setq uniquify-buffer-name-style 'forward)
+;; (setq uniquify-separator "/")
+;; (setq uniquify-after-kill-buffer-p t) ; rename after killing uniquified
+;; (setq uniquify-ignore-buffers-re "^\\*") ; don't muck with special buffers
 
 (require 'saveplace)
 (setq save-place-file (expand-file-name "saveplace" my-savefile-dir))
@@ -240,7 +244,7 @@ Missing packages are installed automatically."
 
 ;; mode line settings
 (global-visual-line-mode 1); Proper line wrapping
-(setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow))
+;(setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow))
 ;(setq-default truncate-lines t)
 
 (global-hl-line-mode 1); Highlight current row
@@ -250,10 +254,6 @@ Missing packages are installed automatically."
 ; (global-show-newlines-mode t)
 ; (indicate-buffer-boundaries 'left)
 
-;; make the fringe (gutter) smaller
-;; the argument is a width in pixels (the default is 8)
-(if (fboundp 'fringe-mode)
-    (fringe-mode 4))
 (setq-default indicate-buffer-boundaries 'left)
 (setq-default indicate-empty-lines +1)
 
@@ -406,16 +406,7 @@ Missing packages are installed automatically."
 
   ;; Help should search more than just commands
   (define-key 'help-command "a" 'apropos)
-
-  ;; This is a little hacky since VC doesn't support git add internally
-  (eval-after-load 'vc
-    (define-key vc-prefix-map "i"
-      '(lambda () (interactive)
-         (if (not (eq 'Git (vc-backend buffer-file-name)))
-             (vc-register)
-           (shell-command (format "git add %s" buffer-file-name))
-           (message "Staged changes.")))))
-)
+  )
 
 ;; EShell
 
@@ -669,10 +660,10 @@ This functions should be added to the hooks of major modes for programming."
 
 (add-hook 'TeX-mode-hook 'flyspell-mode); Enable Flyspell mode for TeX modes such as AUCTeX. Highlights all misspelled words.
 (setq ispell-dictionary "american"); Default dictionary. To change do M-x ispell-change-dictionary RET.
-; (add-hook 'TeX-language-de-hook
-;       (lambda () (ispell-change-dictionary "german")))
-; (add-hook 'TeX-language-en-hook
-;       (lambda () (ispell-change-dictionary "american")))
+(add-hook 'TeX-language-de-hook
+	  (lambda () (ispell-change-dictionary "de_CH")))
+(add-hook 'TeX-language-en-hook
+       (lambda () (ispell-change-dictionary "american")))
 ; Flyspell-babel not working
 ; (autoload 'flyspell-babel-setup "flyspell-babel")
 ; (add-hook 'latex-mode-hook 'flyspell-babel-setup)
