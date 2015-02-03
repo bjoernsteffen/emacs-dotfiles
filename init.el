@@ -280,11 +280,12 @@
 (set-default 'indent-tabs-mode nil)
 (set-default 'require-final-newline t)
 (set-default 'indicate-empty-lines t)
+(set-default indicate-buffer-boundaries 'left)
 (set-default 'imenu-auto-rescan t)
 
 
 (setq-default fill-column 80)
-(add-hook 'text-mode-hook #'auto-fill-mode)
+(add-hook 'text-mode-hook 'turn-on-auto-fill)
 
 (use-package subword ; Subword/superword editing
              :defer t
@@ -322,7 +323,8 @@
 (use-package paren ; Highlight paired delimiters
              :init (show-paren-mode)
              :config (setq show-paren-when-point-inside-paren t
-                           show-paren-when-point-in-periphery t))
+                           show-paren-when-point-in-periphery t
+                           show-paren-style 'parenthesis))
 (use-package rainbow-delimiters ; Highlight delimiters by depth
              :ensure t
              :defer t
@@ -426,18 +428,6 @@
 (use-package smart-mode-line)
 
 (use-package volatile-highlights)
-
-;; Git
-(use-package git-commit-mode)
-(use-package git-rebase-mode)
-(use-package git-commit-mode)
-(use-package gitconfig-mode)
-(use-package gitignore-mode)
-(use-package gitattributes-mode)
-(use-package magit)
-
-;; Diff-hl
-(use-package diff-hl)
 
 ;; LaTeX
 (use-package auctex
@@ -545,23 +535,21 @@
     (unless (assq 'biblatex reftex-cite-format-builtin)
       (add-to-list 'reftex-cite-format-builtin
                    '(biblatex "The biblatex package"
-                              ((?\C-m . "\\cite[][]{%l}")
-                               (?c . "\\cite[][]{%l}")
-                               (?C . "\\Cite[][]{%l}")
-                               (?f . "\\footcite[][]{%l}")
-                               (?p . "\\parencite[][]{%l}")
-                               (?P . "\\Parencite[][]{%l}")
-                               (?t . "\\textcite[][]{%l}")
-                               (?T . "\\Textcite[][]{%l}")
-                               (?a . "\\autocite[][]{%l}")
-                               (?A . "\\Autocite[][]{%l}")
-                               (?s . "\\smartcite[][]{%l}")
-                               (?S . "\\Smartcite[][]{%l}")
+                              ((?\C-m . "\\cite[]{%l}")
+                               (?c . "\\cite[]{%l}")
+                               (?C . "\\Cite[]{%l}")
+                               (?f . "\\footcite[]{%l}")
+                               (?p . "\\parencite[]{%l}")
+                               (?P . "\\Parencite[]{%l}")
+                               (?t . "\\textcite[]{%l}")
+                               (?T . "\\Textcite[]{%l}")
+                               (?a . "\\autocite[]{%l}")
+                               (?A . "\\Autocite[]{%l}")
+                               (?s . "\\smartcite[]{%l}")
+                               (?S . "\\Smartcite[]{%l}")
                                (?n . "\\nocite{%l}")
                                (?b . "\\blockcquote[]{%l}{}")
-                               (?F . "\\fullcite[]{%l}")
-                               (?x . "[]{%l}")
-                               (?X . "{%l}"))))
+                               (?F . "\\fullcite[]{%l}"))))
       (setq reftex-cite-format 'biblatex)))
   :diminish reftex-mode)
 
@@ -569,11 +557,91 @@
 (add-hook 'TeX-language-de-hook
 	  (lambda () (ispell-change-dictionary "de_CH")))
 (add-hook 'TeX-language-en-hook
-       (lambda () (ispell-change-dictionary "en_US")))
+          (lambda () (ispell-change-dictionary "en_US")))
+
+;; Markdown
+(use-package markdown-mode              ; Markdown
+  :ensure t
+  )
+
+;;; Programming utilities
+(use-package compile                    ; Compile from Emacs
+  :bind (("C-c c" . compile)
+         ("C-c C" . recompile))
+  :config
+  (progn
+    (setq compilation-ask-about-save nil ; Just save before compiling
+          compilation-always-kill t     ; Just kill old compile processes before
+                                        ; starting the new one
+          compilation-scroll-output 'first-error ; Automatically scroll to first
+                                        ; error
+          )))
+
+(use-package highlight-numbers          ; Fontify number literals
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook #'highlight-numbers-mode))
+
+(use-package paredit                    ; Balanced sexp editing
+  :ensure t
+  :defer t
+  :init
+  (progn
+    (dolist (hook '(eval-expression-minibuffer-setup-hook
+                    emacs-lisp-mode-hook
+                    inferior-emacs-lisp-mode-hook
+                    clojure-mode-hook))
+      (add-hook hook #'paredit-mode)))
+  :config
+  (progn
+    ;; Free M-s.  There are some useful bindings in that prefix map.
+    (define-key paredit-mode-map (kbd "M-s") nil)
+    (define-key paredit-mode-map (kbd "M-S-<up>") #'paredit-splice-sexp))
+  :diminish paredit-mode)
+
+(use-package lisp-mode                  ; Emacs Lisp editing
+  :defer t
+  :interpreter ("emacs" . emacs-lisp-mode)
+  :config
+  (progn
+    (require 'ert)))
+
 ;; Python
 (use-package python
-             :mode ("\\.py\\'" . python-mode)
-             :interpreter ("python" . python-mode))
+  :defer t
+  :config
+  (progn
+    ;; PEP 8 compliant filling rules, 79 chars maximum
+    (add-hook 'python-mode-hook (lambda () (setq fill-column 79)))
+    (add-hook 'python-mode-hook #'subword-mode)
+
+    ;; Use a decent syntax and style checker
+    (setq python-check-command "pylint"
+          ;; Use IPython as interpreter
+          python-shell-interpreter "ipython"
+          python-shell-interpreter-args "-i")))
+(use-package anaconda-mode              ; Powerful Python backend for Emacs
+  :ensure t
+  :defer t
+  :init (add-hook 'python-mode-hook #'anaconda-mode))
+(use-package company-anaconda           ; Python backend for Company
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'company
+    (add-to-list 'company-backends 'company-anaconda)))
+
+;; Cucumber
+(use-package feature-mode               ; Feature files for ecukes/cucumber
+  :ensure t
+  :defer t
+  :config
+  (progn
+    ;; Add standard hooks for Feature Mode, since it is no derived mode
+    (add-hook 'feature-mode-hook #'whitespace-mode)
+    (add-hook 'feature-mode-hook #'whitespace-cleanup-mode)
+    (add-hook 'feature-mode-hook #'flyspell-mode)))
 
 ;; Lua
 (use-package lua
@@ -586,108 +654,116 @@
 (use-package csv-mode
              :mode "\\.csv\\'")
 
+;;; Version control
+(use-package vc-hooks                   ; Simple version control
+  :defer t
+  ;; Always follow symlinks to files in VCS repos
+  (setq vc-follow-symlinks t))
+
+(use-package diff-hl                    ; Highlight hunks in fringe
+  :ensure t
+  :defer t
+  :init
+  (progn
+    ;; Highlight changes to the current file in the fringe
+    (global-diff-hl-mode)
+    ;; Highlight changed files in the fringe of Dired
+    (add-hook 'dired-mode-hook 'diff-hl-dired-mode)
+
+    ;; Fall back to the display margin, if the fringe is unavailable
+    (unless (display-graphic-p)
+      (diff-hl-margin-mode))))
+
+;; Magit
+(use-package magit                      ; The one and only Git frontend
+  :ensure t
+  :bind (("H-g"   . magit-status))
+  :config
+  (progn
+    (setq ;; ask me to save buffers
+          magit-save-some-buffers t
+          magit-stage-all-confirm nil
+          magit-unstage-all-confirm nil
+          ;; Except when you ask something useful…
+          magit-set-upstream-on-push t
+          ;; don't put "origin-" in front of new branch names by default
+          magit-default-tracking-name-function 'magit-default-tracking-name-branch-only
+          ;; Use IDO for completion
+          magit-completing-read-function #'magit-ido-completing-read
+          ;; highlight word/letter changes in hunk diffs
+          magit-diff-refine-hunk t
+          ;; ask me if I want to include a revision when rewriting
+          magit-rewrite-inclusive 'ask)
+
+    ;; Auto-revert files after Magit operations
+    (magit-auto-revert-mode))
+  :diminish magit-auto-revert-mode)
+
+(use-package git-commit-mode            ; Git commit message mode
+  :ensure t
+  :defer t)
+
+(use-package gitconfig-mode             ; Git configuration mode
+  :ensure t
+  :defer t)
+
+(use-package gitignore-mode             ; .gitignore mode
+  :ensure t
+  :defer t)
+
+(use-package gitattributes-mode         ; Git attributes mode
+  :ensure t
+  :defer t)
+
+(use-package git-rebase-mode            ; Mode for git rebase -i
+  :ensure t
+  :defer t)
+
+(use-package git-timemachine            ; Go back in Git time
+  :ensure t)
+
+;; Calendar and Time settings
+(setq calendar-week-start-day 1)
+(setq european-calendar-style t)
+(setq calendar-time-display-form
+      '(24-hours ":" minutes
+		 (if time-zone " (") time-zone (if time-zone ")")))
+(setq calendar-time-zone +100
+      calendar-standard-time-zone-name "CET"
+      calendar-daylight-time-zone-name "CEST")
+(use-package calendar                   ; Built-in calendar
+  :config
+  (setq calendar-week-start-day 1
+        european-calendar-style t
+        calendar-time-display-form
+        '(24-hours ":" minutes
+                   (if time-zone " (") time-zone (if time-zone ")"))
+        calendar-time-zone +100
+        calendar-standard-time-zone-name "CET"
+        calendar-daylight-time-zone-name "CEST"
+        ))
 
 
+(bind-key "H-k" #'describe-personal-keybindings)
 
 
+(use-package visual-line
+  :init (global-visual-line-mode 1))
 
-
-
-
-
-
-
-
-
-
-(set-default 'imenu-auto-rescan t)
-
-;; Finding Files At Point
-(require 'ffap)
-;; (defvar ffap-c-commment-regexp "^/\\*+"
-;;   "Matches an opening C-style comment, like \"/***\".")
-
-;; (defadvice ffap-file-at-point (after avoid-c-comments activate)
-;;   "Don't return paths like \"/******\" unless they actually exist.
-
-;; This fixes the bug where ido would try to suggest a C-style
-;; comment as a filename."
-;;   (ignore-errors
-;;     (when (and ad-return-value
-;;                (string-match-p ffap-c-commment-regexp
-;;                                ad-return-value)
-;;                (not (ffap-file-exists-string ad-return-value)))
-;;       (setq ad-return-value nil))))
-
-
-
-;; mode line settings
-(global-visual-line-mode 1); Proper line wrapping
-;(setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow))
-;(setq-default truncate-lines t)
-
-(global-hl-line-mode 1); Highlight current row
-;(global-linum-mode t) ; line numbers
 (column-number-mode t)
-
-; (global-show-newlines-mode t)
-; (indicate-buffer-boundaries 'left)
-
-(setq-default indicate-buffer-boundaries 'left)
-(setq-default indicate-empty-lines +1)
-
-(require 'diff-hl)
-(global-diff-hl-mode)
-
-
-;; use zenburn as the default theme
-
 
 ;; delete the selection with a keypress
 (delete-selection-mode t)
 
-;; show-paren-mode: subtle highlighting of matching parens (global-mode)
-(require 'paren)
-(setq show-paren-style 'parenthesis)
-(show-paren-mode +1)
 
 ;; shows what changes when yanking, undoing
-(require 'volatile-highlights)
-(volatile-highlights-mode t)
-(diminish 'volatile-highlights-mode)
-
-(add-hook 'text-mode-hook 'turn-on-auto-fill)
-
+(use-package volatile-highlights
+  :init (volatile-highlights-mode t)
+  :diminish volatile-highlights-mode)
 
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (defalias 'auto-tail-revert-mode 'tail-mode)
-
-;; Automatically reverting buffers
-
-
-(random t) ;; Seed the random-number generator
-
-;; Save Session across Sessions
-(desktop-save-mode 1)
-(setq desktop-dirname my-savefile-dir)
-
-
-
-;; Recent files mode
-(require 'recentf)
-(recentf-mode 1)
-(setq recentf-max-menu-items 25)
-(defun ido-recentf-open ()
-  "Use `ido-completing-read' to \\[find-file] a recent file"
-  (interactive)
-  (if (find-file (ido-completing-read "Find recent file: " recentf-list))
-      (message "Opening file...")
-    (message "Aborting")))
-;; get rid of `find-file-read-only' and replace it with something
-;; more useful.
-(global-set-key (kbd "C-x C-r") 'ido-recentf-open)
- 
 
 ;; Backup Files
 (setq make-backup-files t
@@ -697,7 +773,6 @@
       kept-old-versions 1
       version-control t
       backup-by-copying t
-      ; backup-directory-alist `(("." . ,(concat user-emacs-directory "backups")))
       )
 
 ;; hippie expand is dabbrev expand on steroids
