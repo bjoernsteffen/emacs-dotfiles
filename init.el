@@ -25,12 +25,7 @@
       oddmuse-directory (concat user-emacs-directory "oddmuse")
       save-place-file (concat user-emacs-directory "places"))
 
-(set-face-attribute 'default nil :font "Monaco-12")
-
-(defvar my-savefile-dir (expand-file-name "savefile" user-emacs-directory)
-  "This folder stores all the automatically generated save/history-files.")
-(defvar my-snippets-dir (expand-file-name "snippets" user-emacs-directory)
-  "This folder stores all the snippets for yasnippets.")
+;(set-face-attribute 'default nil :font "Monaco-12")
 
 ;; Please don't load outdated byte code
 (setq load-prefer-newer t)
@@ -38,7 +33,6 @@
 (require 'package)
 (setq package-enable-at-startup nil)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
-(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
 
 (package-initialize)
 
@@ -47,9 +41,15 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
-(require 'thingatpt)
-(require 'dash)
+(require 'use-package)
+
+(require 'subr-x)
+(require 'rx)
 (require 'time-date)
+
+(setq inhibit-default-init t)
+(fset 'yes-or-no-p #'y-or-n-p)
+(fset 'display-startup-echo-area-message #'ignore)
 
 ;; savehist keeps track of some history
 (setq history-length 1000) ; Store more history
@@ -115,6 +115,77 @@
       
 (setq standard-indent 2)
 
+;;; The mode line
+
+(setq-default header-line-format
+              '(which-func-mode ("" which-func-format " "))
+              mode-line-format
+              '("%e" mode-line-front-space
+                ;; Standard info about the current buffer
+                mode-line-mule-info
+                mode-line-client
+                mode-line-modified
+                mode-line-remote
+                mode-line-frame-identification
+                mode-line-buffer-identification " " mode-line-position
+                ;; Some specific information about the current buffer:  Indicate
+                ;; the presence of structured editing, with Paredit or SHM
+                (paredit-mode (:propertize " ()" face bold))
+                (structured-haskell-mode (:propertize shm-lighter face bold))
+                (structured-haskell-repl-mode (:propertize shm-lighter
+                                                           face bold))
+                ;; Warn if whitespace isn't highlighted or cleaned in this
+                ;; buffer.
+                (:eval (unless buffer-read-only
+                         (cond
+                          ((not (bound-and-true-p whitespace-mode))
+                           (propertize " SPACE" 'face '(bold error)))
+                          ((not (bound-and-true-p whitespace-cleanup-mode))
+                           (propertize " WSC" 'face 'warning)))))
+                (projectile-mode projectile-mode-line)
+                (vc-mode vc-mode)
+                (flycheck-mode flycheck-mode-line) ; Flycheck status
+                (anzu-mode (:eval                  ; isearch pos/matches
+                            (when (> anzu--total-matched 0)
+                              (concat " " (anzu--update-mode-line)))))
+                (multiple-cursors-mode mc/mode-line) ; Number of cursors
+                ;; And the modes, which we don't really care for anyway
+                " " mode-line-misc-info mode-line-modes mode-line-end-spaces)
+              mode-line-remote
+              '(:eval
+                (when-let (host (file-remote-p default-directory 'host))
+                  (propertize (concat "@" host) 'face
+                              '(italic warning))))
+              ;; Remove which func from the mode line, since we have it in the
+              ;; header line
+              mode-line-misc-info
+              (assq-delete-all 'which-func-mode mode-line-misc-info))
+
+;; Standard stuff
+(line-number-mode)
+(column-number-mode)
+
+(use-package anzu                       ; Position/matches count for isearch
+  :ensure t
+  :init (global-anzu-mode)
+  :config (setq anzu-cons-mode-line-p nil)
+  :diminish anzu-mode)
+
+(use-package which-func                 ; Current function name in header line
+  :defer t
+  :idle (which-function-mode)
+  :idle-priority 1
+  :config
+  (setq which-func-unknown "⊥" ; The default is really boring…
+        which-func-format
+        `((:propertize (" ➤ " which-func-current)
+                       local-map ,which-func-keymap
+                       face which-func
+                       mouse-face mode-line-highlight
+                       help-echo "mouse-1: go to beginning\n\
+mouse-2: toggle rest visibility\n\
+mouse-3: go to end"))))
+
 ;; Zenburn Theme
 (use-package zenburn-theme
              :init (load-theme 'zenburn t))
@@ -139,14 +210,16 @@
 (use-package flx-ido ; Flex matching for IDO
              :ensure t
              :init (flx-ido-mode))
-(use-package ido-vertical-mode ; Vertical interface for IDO
-             :ensure t
-             :init (ido-vertical-mode))
+;(use-package ido-vertical-mode ; Vertical interface for IDO
+;             :ensure t
+;             :init (ido-vertical-mode))
 (use-package smex ; Better M-x
              :ensure t
              :bind (([remap execute-extended-command] . smex)
                     ("M-X" . smex-major-mode-commands)))
 
+(use-package uniquify                   ; Make buffer names unique
+  :config (setq uniquify-buffer-name-style 'forward))
 
 ;; IBuffer
 (use-package ibuffer ; Better buffer list
@@ -188,6 +261,8 @@
                     ((kbd "S-<right>") . windmove-right)
                     ((kbd "S-<up>") . windmove-up)
                     ((kbd "S-<down>") . windmove-down)))
+(use-package winner                     ; Undo and redo window configurations
+             :init (winner-mode))
 
 (use-package ediff-wind
              :defer t
@@ -737,15 +812,8 @@
         (LaTeX-newline)))))
 (ad-activate 'LaTeX-fill-region-as-paragraph)
 
-;; Markdown
-(use-package markdown-mode              ; Markdown
-  :ensure t
-  )
-
 ;;; Programming utilities
 (use-package compile                    ; Compile from Emacs
-  :bind (("C-c c" . compile)
-         ("C-c C" . recompile))
   :config
   (progn
     (setq compilation-ask-about-save nil ; Just save before compiling
@@ -824,9 +892,11 @@
 ;; Lua
 (use-package lua
              :mode ("\\.lua\\'" . lua-mode)
-             :interprete ("lua" . lua-mode))
+             :interpreter ("lua" . lua-mode))
 
+;; Markdown
 (use-package markdown-mode
+             :ensure t
              :mode ("\\.md\\'" . markdown-mode))
 
 (use-package csv-mode
