@@ -233,6 +233,16 @@
              (when (eq system-type 'darwin)
                ;; OS X bsdtar is mostly compatible with GNU Tar
                (setq dired-guess-shell-gnutar "tar")))
+;; I use ibuffer for my C-x C-b binding instead of list-buffers. This
+;; has the ability to group buffers. I tend to wind up with a lot of
+;; dired buffers, so it's nice to group them together:
+(setq ibuffer-saved-filter-groups
+      (quote (("default"
+               ("dired" (mode . dired-mode))))))
+
+;; if there is a dired buffer displayed in the next window, use its
+;; current subdir, instead of the current subdir of this dired buffer
+(setq dired-dwim-target t)
 
 (use-package ignoramus ; Ignore uninteresting files everywhere
              :ensure t
@@ -465,7 +475,12 @@
                      ;; Provide forward and inverse search with SyncTeX
                      TeX-source-correlate-mode t
                      TeX-source-correlate-method 'synctex
-                     )
+                     TeX-view-program-selection '((output-pdf "Skim"))
+                     TeX-view-program-list
+                     '(("DVI Viewer" "open -a Skim %o")
+                       ("Preview" "open -a Preview %o")
+                       ("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline %n %o %b")
+                       ("HTML Viewer" "open %o")))
                (setq-default TeX-master nil ; Ask for the master file
                              TeX-PDF-mode t)))
 (use-package tex-buf                    ; TeX buffer management
@@ -509,6 +524,52 @@
                                          (,(rx (0+ space) "\\minisec{") 5))
                      ;; No language-specific hyphens please
                      LaTeX-babel-hyphen nil)
+               (LaTeX-add-environments
+                '("definition" LaTeX-env-label)
+                '("lemma" LaTeX-env-label)
+                '("theorem" LaTeX-env-label)
+                '("observation" LaTeX-env-label)
+                '("corollary" LaTeX-env-label)
+                '("algorithm" LaTeX-env-label) )
+               (TeX-add-symbols
+                '("cref" TeX-arg-ref)
+                '("Cref" TeX-arg-ref)
+                '("labelcref" TeX-arg-ref)
+                '("labelcpageref" TeX-arg-ref)
+                '("namecref" TeX-arg-ref)
+                '("nameCref" TeX-arg-ref)
+                '("namecrefs" TeX-arg-ref)
+                '("nameCrefs" TeX-arg-ref)
+                '("lcnamecref" TeX-arg-ref)
+                '("lcnamecrefs" TeX-arg-ref)
+                '("cpageref" TeX-arg-ref)
+                '("Cpageref" TeX-arg-ref)
+                '("subref" TeX-arg-ref))
+               
+               (setq font-latex-match-textual-keywords
+                     '(
+                       ;; biblatex brackets
+                       ("parentext" "{")
+                       ("brackettext" "{")
+                       ("hybridblockquote" "[{")
+                       ;; caption
+                       ("subcaption" "[{")
+                       ("subcaptionbox" "*[{[[")
+                       ("captionof" "*[{{")))
+               
+               (setq font-latex-match-variable-keywords
+                     '(
+                       ;; amsmath
+                       ("numberwithin" "{")
+                       ;; enumitem
+                       ("setlist" "[{")
+                       ("setlist*" "[{")
+                       ("newlist" "{")
+                       ("renewlist" "{")
+                       ("setlistdepth" "{")
+                       ("restartlist" "{")))
+               (setcdr (assoc 'caption reftex-default-context-regexps) "\\\\\\(rot\\|sub\\)?caption\\*?[[{]"); Recognize \subcaptions, e.g. reftex-citation
+               )
 
                (add-hook 'LaTeX-mode-hook #'LaTeX-math-mode)))    ; Easy math input
 
@@ -520,7 +581,11 @@
                (add-hook 'bibtex-mode-hook (lambda () (run-hooks 'prog-mode-hook)))
                
                ;; Use a modern BibTeX dialect
-               (bibtex-set-dialect 'biblatex)))
+               (bibtex-set-dialect 'biblatex)
+               (setq bibtex-text-indentation 19
+                     bibtex-contline-indentation 20
+                     bibtex-align-at-equal-sign t)
+               ))
 
 (use-package reftex                     ; TeX/BibTeX cross-reference management
   :defer t
@@ -546,8 +611,89 @@
           ("corollary*" ?c "cor:" "~\\ref{%s}" t ("corollary" "cor."))
           ("algorithm" ?a "alg:" "~\\ref{%s}" t ("algorithm" "alg."))
           ("example" ?x "ex:" "~\\ref{%s}" t ("example" "ex."))
-          ))
-
+          ("\subcaptionbox{}{}" ?f "fig:" "~\\ref{%s}" 1 ("figure" "fig."))
+          )
+          )
+    (add-to-list
+           'reftex-ref-style-alist
+           '("Subcaption" "subcaption"
+             (("\\subref" ?s))))
+    (add-to-list
+           'reftex-ref-style-alist
+           '("Cleveref" "cleveref"
+             (("\\cref" ?c)
+              ("\\Cref" ?C)
+              ("\\namecref" ?n)
+              ("\\nameCref" ?N)
+              ("\\labelcref" ?l)
+              ("\\cpageref" ?d)
+              ("\\Cpageref" ?D))))
+    (setq font-latex-match-reference-keywords
+           '(
+             ;; cleveref
+             ("cref" "*{")
+             ("Cref" "*{")
+             ("namecref" "{")
+             ("labelcref" "{")
+             ("labelcpageref" "{")
+             ("namecref" "{")
+             ("nameCref" "{")
+             ("namecrefs" "{")
+             ("nameCrefs" "{")
+             ("lcnamecref" "{")
+             ("lcnamecrefs" "{")
+             ("cpageref" "{")
+             ("Cpageref" "{")
+             ;; subcaption
+             ("subref" "{")
+             ;; biblatex
+             ("printbibliography" "[{")
+             ("addbibresource" "[{")
+             ;; Standard commands
+             ("cite" "[[{")
+             ("Cite" "[[{")
+             ("parencite" "[[{")
+             ("Parencite" "[[{")
+             ("footcite" "[[{")
+             ("footcitetext" "[[{")
+             ;; Style-specific commands
+             ("textcite" "[[{")
+             ("Textcite" "[[{")
+             ("smartcite" "[[{")
+             ("Smartcite" "[[{")
+             ("cite*" "[[{")
+             ("parencite*" "[[{")
+             ("supercite" "{")
+             ;; Qualified citation lists
+             ("cites" "[{")
+	     ("Cites" "[{")
+	     ("parencites" "[{")
+	     ("Parencites" "[{")
+	     ("footcites" "[{")
+	     ("footcitetexts" "[{")
+	     ("smartcites" "[{")
+	     ("Smartcites" "[{")
+	     ("textcites" "[{")
+	     ("Textcites" "[{")
+	     ("supercites" "[{")
+	     ;; Style-independent commands
+	     ("autocite" "[[{")
+	     ("Autocite" "[[{")
+	     ("autocite*" "[[{")
+	     ("Autocite*" "[[{")
+	     ("autocites" "[{")
+	     ("Autocites" "[{")
+	     ;; Text commands
+	     ("citeauthor" "[[{")
+	     ("Citeauthor" "[[{")
+	     ("citetitle" "[[{")
+	     ("citetitle*" "[[{")
+	     ("citeyear" "[[{")
+	     ("citedate" "[[{")
+	     ("citeurl" "[[{")
+	     ;; Special commands
+	     ("fullcite" "[[{")))
+    
     ;; Provide basic RefTeX support for biblatex
     (unless (assq 'biblatex reftex-cite-format-builtin)
       (add-to-list 'reftex-cite-format-builtin
@@ -575,6 +721,21 @@
 	  (lambda () (ispell-change-dictionary "de_CH")))
 (add-hook 'TeX-language-en-hook
           (lambda () (ispell-change-dictionary "en_US")))
+
+;; LaTeX Fill paragraph where each sentence starts on a new line.
+(defadvice LaTeX-fill-region-as-paragraph (around LaTeX-sentence-filling)
+  "Start each sentence on a new line."
+  (let ((from (ad-get-arg 0))
+        (to-marker (set-marker (make-marker) (ad-get-arg 1))))
+    (while (< from (marker-position to-marker))
+      (forward-sentence)
+      ;; might have gone beyond to-marker---use whichever is smaller:
+      (ad-set-arg 1 (setq tmp-end (min (point) (marker-position to-marker))))
+      ad-do-it
+      (ad-set-arg 0 (setq from (point)))
+      (unless (bolp)
+        (LaTeX-newline)))))
+(ad-activate 'LaTeX-fill-region-as-paragraph)
 
 ;; Markdown
 (use-package markdown-mode              ; Markdown
@@ -771,6 +932,19 @@
   :init (volatile-highlights-mode t)
   :diminish volatile-highlights-mode)
 
+;; Give us narrowing back!
+(put 'narrow-to-region 'disabled nil)
+(put 'narrow-to-page 'disabled nil)
+(put 'narrow-to-defun 'disabled nil)
+
+;; Same for region casing
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
+
+(use-package printing
+             :defer t
+             :conf (pr-update-menus t))
+
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (defalias 'auto-tail-revert-mode 'tail-mode)
@@ -801,494 +975,20 @@
 (load "~/.emacs.d/eshell-customizations.el")
 
 
-;; ;;;###autoload
-(eval-after-load 'esh-opt
-   '(progn
-      (require 'em-prompt)
-      (require 'em-term)
-      (require 'em-cmpl)
-      (setenv "PAGER" "cat")
-;; ;     (set-face-attribute 'eshell-prompt nil :foreground "turquoise1")
-;;      (add-hook 'eshell-mode-hook ;; for some reason this needs to be a hook
-;;                '(lambda () (define-key eshell-mode-map "\C-a" 'eshell-bol)))
- 
-      (add-to-list 'eshell-visual-commands "ssh")
-      (add-to-list 'eshell-visual-commands "tail")
-      (add-to-list 'eshell-command-completions-alist
-                   '("gunzip" "gz\\'"))
-      (add-to-list 'eshell-command-completions-alist
-                   '("tar" "\\(\\.tar|\\.tgz\\|\\.tar\\.gz\\)\\'"))))
-
-;; ;;;###autoload
-;; (when (not (functionp 'eshell/rgrep))
-;;   (defun eshell/rgrep (&rest args)
-;;     "Use Emacs grep facility instead of calling external grep."
-;;     (eshell-grep "rgrep" args t)))
-
-;; ;;;###autoload
-;; (defun eshell/extract (file)
-;;   (let ((command (some (lambda (x)
-;;                          (if (string-match-p (car x) file)
-;;                              (cadr x)))
-;;                        '((".*\.tar.bz2" "tar xjf")
-;;                          (".*\.tar.gz" "tar xzf")
-;;                          (".*\.bz2" "bunzip2")
-;;                          (".*\.rar" "unrar x")
-;;                          (".*\.gz" "gunzip")
-;;                          (".*\.tar" "tar xf")
-;;                          (".*\.tbz2" "tar xjf")
-;;                          (".*\.tgz" "tar xzf")
-;;                          (".*\.zip" "unzip")
-;;                          (".*\.Z" "uncompress")
-;;                          (".*" "echo 'Could not extract the file:'")))))
-;;     (eshell-command-result (concat command " " file))))
-
-;; (defface esk-eshell-error-prompt-face
-;;   '((((class color) (background dark)) (:foreground "red" :bold t))
-;;     (((class color) (background light)) (:foreground "red" :bold t)))
-;;   "Face for nonzero prompt results"
-;;   :group 'eshell-prompt)
-
-;; (add-hook 'eshell-after-prompt-hook
-;;           (defun esk-eshell-exit-code-prompt-face ()
-;;             (when (and eshell-last-command-status
-;;                        (not (zerop eshell-last-command-status)))
-;;               (let ((inhibit-read-only t))
-;;                 (add-text-properties
-;;                  (save-excursion (beginning-of-line) (point)) (point-max)
-;;                  '(face esk-eshell-error-prompt-face))))))
-
-;; (defun esk-eshell-in-dir (&optional prompt)
-;;   "Change the directory of an existing eshell to the directory of the file in
-;; the current buffer or launch a new eshell if one isn't running. If the
-;; current buffer does not have a file (e.g., a *scratch* buffer) launch or raise
-;; eshell, as appropriate. Given a prefix arg, prompt for the destination
-;; directory."
-;;   (interactive "P")
-;;   (let* ((name (buffer-file-name))
-;;          (dir (cond (prompt (read-directory-name "Directory: " nil nil t))
-;;                     (name (file-name-directory name))
-;;                     (t nil)))
-;;          (buffers (delq nil (mapcar (lambda (buf)
-;;                                       (with-current-buffer buf
-;;                                         (when (eq 'eshell-mode major-mode)
-;;                                           (buffer-name))))
-;;                                     (buffer-list))))
-;;          (buffer (cond ((eq 1 (length buffers)) (first buffers))
-;;                        ((< 1 (length buffers)) (ido-completing-read
-;;                                                 "Eshell buffer: " buffers nil t
-;;                                                 nil nil (first buffers)))
-;;                        (t (eshell)))))
-;;     (with-current-buffer buffer
-;;       (when dir
-;;         (eshell/cd (list dir))
-;;         (eshell-send-input))
-;;       (end-of-buffer)
-;;       (pop-to-buffer buffer))))
-
-
 (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode); Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
 
 
+(use-package smart-mode-line
+             :ensure t
+             :conf (sml/setup))
 
-;; Dired
-(require 'dired+)
-;; dired - reuse current buffer by pressing 'a'
-(put 'dired-find-alternate-file 'disabled nil)
-;; always delete and copy recursively
-(setq dired-recursive-deletes 'always)
-(setq dired-recursive-copies 'always)
-(setq dired-listing-switches "-alhF")
-;; Handle zip compression
-(eval-after-load "dired-aux"
-  '(add-to-list 'dired-compress-file-suffixes
-                '("\\.zip\\'" ".zip" "unzip")))
-;; I use ibuffer for my C-x C-b binding instead of list-buffers. This
-;; has the ability to group buffers. I tend to wind up with a lot of
-;; dired buffers, so it's nice to group them together:
-(setq ibuffer-saved-filter-groups
-      (quote (("default"
-               ("dired" (mode . dired-mode))))))
-
-;; if there is a dired buffer displayed in the next window, use its
-;; current subdir, instead of the current subdir of this dired buffer
-(setq dired-dwim-target t)
-
-;; enable some really cool extensions like C-x C-j(dired-jump)
-;(require 'dired-x)
-
-
-;; magit
-(global-set-key (kbd "C-x g") 'magit-status)
-(setq
- ;; use ido to look for branches
- magit-completing-read-function 'magit-ido-completing-read
- ;; don't put "origin-" in front of new branch names by default
- magit-default-tracking-name-function 'magit-default-tracking-name-branch-only
- ;; open magit status in same window as current buffer
- ;magit-status-buffer-switch-function 'switch-to-buffer
- ;; highlight word/letter changes in hunk diffs
- magit-diff-refine-hunk t
- ;; ask me if I want to include a revision when rewriting
- magit-rewrite-inclusive 'ask
- ;; ask me to save buffers
- magit-save-some-buffers t
- ;; pop the process buffer if we're taking a while to complete
- magit-process-popup-time 10
- ;; ask me if I want a tracking upstream
- magit-set-upstream-on-push 'askifnotset
- )
-
-;; clean up obsolete buffers automatically
-(require 'midnight)
-
-;; abbrev config
-(add-hook 'text-mode-hook 'abbrev-mode)
-
-;; saner regex syntax
-(require 're-builder)
-(setq reb-re-syntax 'string)
-
-(require 'eshell)
-(setq eshell-directory-name (expand-file-name "eshell" my-savefile-dir))
-
-;; enable winner-mode to manage window configurations
-(winner-mode +1)
-
-;; IBuffer for buffer lsit
-(global-set-key (kbd "C-x C-b") 'ibuffer)
-(autoload 'ibuffer "ibuffer" "List buffers." t)
-
-(setq kill-buffer-query-functions
-  (remq 'process-kill-buffer-query-function
-        kill-buffer-query-functions))
-
-;; hi-lock-mode
-(global-hi-lock-mode 1)
-(setq hi-lock-file-patterns-policy #'(lambda (dummy) t))
-(defadvice hi-lock-set-pattern (around use-overlays activate)
-  (let ((font-lock-fontified nil))
-    ad-do-it))
-
-;; Highlight Comment Annotations
-(defun font-lock-comment-annotations ()
-  "Highlight a bunch of well known comment annotations.
-
-This functions should be added to the hooks of major modes for programming."
-  (font-lock-add-keywords
-   nil '(("\\<\\(FIX\\(ME\\)?\\|TODO\\|OPTIMIZE\\|HACK\\|REFACTOR\\):"
-          1 font-lock-warning-face t))))
-
-(add-hook 'prog-mode-hook 'font-lock-comment-annotations)
-(add-hook 'text-mode-hook 'font-lock-comment-annotations)
-
-
-(add-hook 'outline-minor-mode-hook
-          (lambda ()
-            (require 'outline-magic)
-            (define-key outline-minor-mode-map [(control tab)] 'outline-cycle)))
-
-; use allout minor mode to have outlining everywhere.
-(allout-mode)
-
-;; Convenient printing
-(require 'printing)
-(pr-update-menus t)
-
-;; LaTeX
-(setq TeX-auto-save t)
-(setq TeX-parse-self t)
-(setq-default TeX-master nil)
-(setq TeX-save-query nil)
-
-;; use pdflatex
-(setq TeX-PDF-mode t)
-(setq TeX-style-local "style/")
-(defun my/LaTeX-mode-hook ()
-  (local-set-key [remap next-error] nil)
-  (local-set-key [remap previous-error] nil))
-
-(add-hook 'LaTeX-mode-hook 'my/LaTeX-mode-hook)
-(add-hook 'LaTeX-mode-hook
-          '(lambda ()
-             (define-key LaTeX-mode-map "\C-c!" 'TeX-next-error)))
-
-(add-hook 'TeX-mode-hook 'flyspell-mode); Enable Flyspell mode for TeX modes such as AUCTeX. Highlights all misspelled words.
-(setq ispell-dictionary "american"); Default dictionary. To change do M-x ispell-change-dictionary RET.
-(add-hook 'TeX-language-de-hook
-	  (lambda () (ispell-change-dictionary "de_CH")))
-(add-hook 'TeX-language-en-hook
-       (lambda () (ispell-change-dictionary "american")))
-; Flyspell-babel not working
-; (autoload 'flyspell-babel-setup "flyspell-babel")
-; (add-hook 'latex-mode-hook 'flyspell-babel-setup)
-; (add-to-list 'flyspell-babel-command-alist ("hyphenquote" "hyphenquote"))
-; (add-to-list 'flyspell-babel-command-alist ("foreignquote" "foreignquote"))
-; (add-to-list 'flyspell-babel-environment-alist ("hyphenrules" "hyphenrules"))
-;(setq LaTeX-babel-hyphen nil); Disable language-specific hyphen insertion.
-
-(add-hook 'TeX-mode-hook 'font-lock-comment-annotations)
-(add-hook 'TeX-mode-hook 'turn-on-auto-fill)
-
-(add-hook 'TeX-mode-hook
-      (lambda () (TeX-fold-mode 1))); Automatically activate TeX-fold-mode.
-
-(add-hook 'text-mode-hook
-      (lambda () (abbrev-mode 1)))
-
-;; " expands into csquotes macros (for this to work babel must be loaded after csquotes).
-(setq LaTeX-csquotes-close-quote "}"
-      LaTeX-csquotes-open-quote "\\enquote{")
-
-;; LaTeX-math-mode http://www.gnu.org/s/auctex/manual/auctex/Mathematics.html
-(add-hook 'TeX-mode-hook 'LaTeX-math-mode)
-
-;;; RefTeX
-;; Turn on RefTeX for AUCTeX http://www.gnu.org/s/auctex/manual/reftex/reftex_5.html
-(add-hook 'TeX-mode-hook 'turn-on-reftex)
-
-(add-hook 'LaTeX-mode-hook
-          (lambda ()
-            (LaTeX-add-environments
-             '("definition" LaTeX-env-label)
-             '("lemma" LaTeX-env-label)
-             '("theorem" LaTeX-env-label)
-             '("observation" LaTeX-env-label)
-             '("corollary" LaTeX-env-label)
-             '("algorithm" LaTeX-env-label) )
-            (TeX-add-symbols
-             '("cref" TeX-arg-ref)
-             '("Cref" TeX-arg-ref)
-             '("labelcref" TeX-arg-ref)
-             '("labelcpageref" TeX-arg-ref)
-             '("namecref" TeX-arg-ref)
-             '("nameCref" TeX-arg-ref)
-             '("namecrefs" TeX-arg-ref)
-             '("nameCrefs" TeX-arg-ref)
-             '("lcnamecref" TeX-arg-ref)
-             '("lcnamecrefs" TeX-arg-ref)
-             '("cpageref" TeX-arg-ref)
-             '("Cpageref" TeX-arg-ref)
-             '("subref" TeX-arg-ref))))
-
-(eval-after-load
-    "latex"
-  '(TeX-add-style-hook
-    "cleveref"
-    (lambda ()
-      (if (boundp 'reftex-ref-style-alist)
-          (add-to-list
-           'reftex-ref-style-alist
-           '("Cleveref" "cleveref"
-             (("\\cref" ?c)
-              ("\\Cref" ?C)
-              ("\\namecref" ?n)
-              ("\\nameCref" ?N)
-              ("\\labelcref" ?l)
-              ("\\cpageref" ?d)
-              ("\\Cpageref" ?D) )))))))
-
-(eval-after-load
-    "latex"
-  '(TeX-add-style-hook
-    "subcaption"
-    (lambda ()
-      (if (boundp 'reftex-ref-style-alist)
-          (add-to-list
-           'reftex-ref-style-alist
-           '("Subcaption" "subcaption"
-             (("\\subref" ?s))))
-          (add-to-list
-           'reftex-label-alist
-           '("\subcaptionbox{}{}" ?f "fig:" "~\\ref{%s}" nil ("figure" "fig."))
-           )
-        ))))
-
-             
-
-(setq reftex-ref-style-default-list '("Default" "Cleveref" "Subcaption"))
-
-(setq reftex-label-alist
-        '(("definition" ?d "def:"  "~\\ref{%s}" t ("definition" "def."))
-          ("lemma" ?l "lem:" "~\\ref{%s}" t ("lemma" "lem."))
-          ("lemma*" ?l "lem:" "~\\ref{%s}" t ("lemma" "lem."))
-          ("theorem" ?h "thm:" "~\\ref{%s}" t ("theorem" "th."))
-          ("theorem*" ?h "thm:" "~\\ref{%s}" t ("theorem" "th."))
-          ("observation" ?o "obs:" "~\\ref{%s}" t ("observation" "obs."))
-          ("observation*" ?o "obs:" "~\\ref{%s}" t ("observation" "obs."))
-          ("corollary" ?c "cor:" "~\\ref{%s}" t ("corollary" "cor."))
-          ("corollary*" ?c "cor:" "~\\ref{%s}" t ("corollary" "cor."))
-          ("algorithm" ?a "alg:" "~\\ref{%s}" t ("algorithm" "alg."))
-          ))
-
-;; RefTeX settings for biblatex
-(eval-after-load 'reftex-vars; Is this construct really needed?
-  '(progn
-     (setq reftex-cite-format; Get ReTeX with biblatex, see http://tex.stackexchange.com/questions/31966/setting-up-reftex-with-biblatex-citation-commands/31992#31992
-           '((?c . "\\cite[][]{%l}")
-             (?C . "\\Cite[][]{%l}")
-             (?f . "\\footcite[][]{%l}")
-             (?p . "\\parencite[][]{%l}")
-             (?P . "\\Parencite[][]{%l}")
-             (?t . "\\textcite[][]{%l}")
-             (?T . "\\Textcite[][]{%l}")
-             (?a . "\\autocite[][]{%l}")
-             (?A . "\\Autocite[][]{%l}")
-             (?s . "\\smartcite[][]{%l}")
-             (?S . "\\Smartcite[][]{%l}")
-             (?n . "\\nocite{%l}")
-             (?b . "\\blockcquote[]{%l}{}")))
-     (setq reftex-cite-prompt-optional-args t)
-     (setq reftex-plug-into-AUCTeX t)
-
-     ;; Fontification (remove unnecessary entries as you notice them) http://lists.gnu.org/archive/html/emacs-orgmode/2009-05/msg00236.html http://www.gnu.org/software/auctex/manual/auctex/Fontification-of-macros.html
-     (setq font-latex-match-reference-keywords
-           '(
-             ;; cleveref
-             ("cref" "*{")
-             ("Cref" "*{")
-             ("namecref" "{")
-             ("labelcref" "{")
-             ("labelcpageref" "{")
-             ("namecref" "{")
-             ("nameCref" "{")
-             ("namecrefs" "{")
-             ("nameCrefs" "{")
-             ("lcnamecref" "{")
-             ("lcnamecrefs" "{")
-             ("cpageref" "{")
-             ("Cpageref" "{")
-             ;; subcaption
-             ("subref" "{")
-             ;; biblatex
-             ("printbibliography" "[{")
-             ("addbibresource" "[{")
-             ;; Standard commands
-             ("cite" "[[{")
-             ("Cite" "[[{")
-             ("parencite" "[[{")
-             ("Parencite" "[[{")
-             ("footcite" "[[{")
-             ("footcitetext" "[[{")
-             ;; Style-specific commands
-             ("textcite" "[[{")
-             ("Textcite" "[[{")
-             ("smartcite" "[[{")
-             ("Smartcite" "[[{")
-             ("cite*" "[[{")
-             ("parencite*" "[[{")
-             ("supercite" "{")
-             ;; Qualified citation lists
-             ("cites" "[{")
-	     ("Cites" "[{")
-	     ("parencites" "[{")
-	     ("Parencites" "[{")
-	     ("footcites" "[{")
-	     ("footcitetexts" "[{")
-	     ("smartcites" "[{")
-	     ("Smartcites" "[{")
-	     ("textcites" "[{")
-	     ("Textcites" "[{")
-	     ("supercites" "[{")
-	     ;; Style-independent commands
-	     ("autocite" "[[{")
-	     ("Autocite" "[[{")
-	     ("autocite*" "[[{")
-	     ("Autocite*" "[[{")
-	     ("autocites" "[{")
-	     ("Autocites" "[{")
-	     ;; Text commands
-	     ("citeauthor" "[[{")
-	     ("Citeauthor" "[[{")
-	     ("citetitle" "[[{")
-	     ("citetitle*" "[[{")
-	     ("citeyear" "[[{")
-	     ("citedate" "[[{")
-	     ("citeurl" "[[{")
-	     ;; Special commands
-	     ("fullcite" "[[{")))
-
-     (setq font-latex-match-textual-keywords
-	   '(
-	     ;; biblatex brackets
-	     ("parentext" "{")
-	     ("brackettext" "{")
-	     ("hybridblockquote" "[{")
-	     ;; Auxiliary Commands
-	     ("textelp" "{")
-	     ("textelp*" "{")
-	     ("textins" "{")
-	     ("textins*" "{")
-	     ;; caption
-	     ("subcaption" "[{")
-	     ("subcaptionbox" "*[{[[")
-	     ("captionof" "*[{{")))
-
-     (setq font-latex-match-variable-keywords
-	   '(
-	     ;; amsmath
-	     ("numberwithin" "{")
-	     ;; enumitem
-	     ("setlist" "[{")
-	     ("setlist*" "[{")
-	     ("newlist" "{")
-	     ("renewlist" "{")
-	     ("setlistdepth" "{")
-	     ("restartlist" "{")))
-     (setcdr (assoc 'caption reftex-default-context-regexps) "\\\\\\(rot\\|sub\\)?caption\\*?[[{]"); Recognize \subcaptions, e.g. reftex-citation
-     ))
-
-
-;; LaTeX Fill paragraph where each sentence starts on a new line.
-(defadvice LaTeX-fill-region-as-paragraph (around LaTeX-sentence-filling)
-  "Start each sentence on a new line."
-  (let ((from (ad-get-arg 0))
-        (to-marker (set-marker (make-marker) (ad-get-arg 1))))
-    (while (< from (marker-position to-marker))
-      (forward-sentence)
-      ;; might have gone beyond to-marker---use whichever is smaller:
-      (ad-set-arg 1 (setq tmp-end (min (point) (marker-position to-marker))))
-      ad-do-it
-      (ad-set-arg 0 (setq from (point)))
-      (unless (bolp)
-        (LaTeX-newline)))))
-(ad-activate 'LaTeX-fill-region-as-paragraph)
-
-(setq bibtex-text-indentation 19)
-(setq bibtex-contline-indentation 20)
-(setq bibtex-align-at-equal-sign t)
-(setq prelude-guru nil)
-
-(add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
-
-(setq TeX-source-correlate-method 'synctex)
-
-(setq TeX-view-program-selection '((output-pdf "Skim")))
-(setq TeX-view-program-list
-      '(("DVI Viewer" "open -a Skim %o")
-        ("Preview" "open -a Preview %o")
-	("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline %n %o %b")
-        ("HTML Viewer" "open %o")))
-
-;; Enable TikZ Syntax highlightning
-;(load "~/.emacs.d/auc-tikz-struct")
-
-;; Maxima
-(push "/usr/local/Cellar/maxima/5.28.0/share/maxima/5.28.0/emacs" load-path)
-(autoload 'imaxima "imaxima" "Maxima frontend" t)
-(autoload 'imath "imath" "Interactive Math mode" t)
 
 
 (load custom-file)
-
-(sml/setup)
-(setq sml/theme 'dark)
 
 ;; Start Emacs Server
 (use-package server ; The server of `emacsclient'
              :defer t
              :idle (server-start))
 
-
-(provide 'init)
 ;;; init.el ends here
