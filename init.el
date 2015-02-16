@@ -239,8 +239,13 @@
              :defer t
              :idle (ignoramus-setup))
 
+(use-package hardhat                    ; Protect user-writable files
+             :ensure t
+             :defer t
+             :idle (global-hardhat-mode))
+
 (use-package bookmark ; Bookmarks for Emacs buffers
-             :bind (("C-c l b" . list-bookmarks))
+             :bind (("H-b l" . list-bookmarks))
              ;; Save bookmarks immediately after a bookmark was added
              :config (setq bookmark-save-flag 1))
 
@@ -277,12 +282,19 @@
              :defer t
              :idle (global-launch-mode))
 
-(set-default 'indent-tabs-mode nil)
-(set-default 'require-final-newline t)
-(set-default 'indicate-empty-lines t)
+(set-default indent-tabs-mode nil)
+;; Make Tab complete if the line is indented
+(setq tab-always-indent 'complete)
+(set-default require-final-newline t)
+(set-default indicate-empty-lines t)
 (set-default indicate-buffer-boundaries 'left)
-(set-default 'imenu-auto-rescan t)
+(set-default imenu-auto-rescan t)
 
+(use-package electric                   ; Electric code layout
+  :init (electric-layout-mode))
+
+(use-package elec-pair                  ; Electric pairs
+  :init (electric-pair-mode))
 
 (setq-default fill-column 80)
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
@@ -307,6 +319,10 @@
              :ensure t
              :bind (("C-=" . er/expand-region)))
 
+(use-package easy-kill                  ; Easy killing and marking on C-w
+  :ensure t
+  :bind (([remap kill-ring-save] . easy-kill)
+         ([remap mark-sexp]      . easy-mark)))
 
 (bind-key [remap just-one-space] #'cycle-spacing)
 
@@ -349,6 +365,7 @@
                      try-complete-file-name
                      try-expand-all-abbrevs
                      try-expand-list
+                     try-expand-line
                      try-complete-lisp-symbol-partially
                      try-complete-lisp-symbol)))
 
@@ -723,14 +740,6 @@
   :ensure t)
 
 ;; Calendar and Time settings
-(setq calendar-week-start-day 1)
-(setq european-calendar-style t)
-(setq calendar-time-display-form
-      '(24-hours ":" minutes
-		 (if time-zone " (") time-zone (if time-zone ")")))
-(setq calendar-time-zone +100
-      calendar-standard-time-zone-name "CET"
-      calendar-daylight-time-zone-name "CEST")
 (use-package calendar                   ; Built-in calendar
   :config
   (setq calendar-week-start-day 1
@@ -752,12 +761,13 @@
 
 (column-number-mode t)
 
-;; delete the selection with a keypress
-(delete-selection-mode t)
-
+(use-package delsel                     ; Delete the selection instead of insert
+  :defer t
+  :init (delete-selection-mode))
 
 ;; shows what changes when yanking, undoing
 (use-package volatile-highlights
+  :ensure t
   :init (volatile-highlights-mode t)
   :diminish volatile-highlights-mode)
 
@@ -775,93 +785,19 @@
       backup-by-copying t
       )
 
-;; hippie expand is dabbrev expand on steroids
-(setq hippie-expand-try-functions-list '(try-expand-dabbrev
-                                         try-expand-dabbrev-all-buffers
-                                         try-expand-dabbrev-from-kill
-                                         try-complete-file-name-partially
-                                         try-complete-file-name
-                                         try-expand-all-abbrevs
-                                         try-expand-list
-                                         try-expand-line
-                                         try-complete-lisp-symbol-partially
-                                         try-complete-lisp-symbol))
-
-;; smart pairing for all
-(electric-pair-mode t)
-
-;; diminish keeps the modeline tidy
-(require 'diminish)
-
-;; Hippie expand: at times perhaps too hip
-(eval-after-load 'hippie-exp
-  '(progn
-     (dolist (f '(try-expand-line try-expand-list try-complete-file-name-partially))
-       (delete f hippie-expand-try-functions-list))
-     
-     ;; Add this back in at the end of the list.
-     (add-to-list 'hippie-expand-try-functions-list 'try-complete-file-name-partially t)))
-
-(eval-after-load 'grep
-  '(when (boundp 'grep-find-ignored-files)
-     (add-to-list 'grep-find-ignored-files "*.class")))
-
-;; Calendar and Time settings
-(setq calendar-week-start-day 1)
-(setq european-calendar-style t)
-(setq calendar-time-display-form
-      '(24-hours ":" minutes
-		 (if time-zone " (") time-zone (if time-zone ")")))
-(setq calendar-time-zone +100
-      calendar-standard-time-zone-name "CET"
-      calendar-daylight-time-zone-name "CEST")
-
-
 ;; Key bindings
 (progn
-
-  ;; Completion that uses many different methods to find options.
-  (global-set-key (kbd "M-/") 'hippie-expand)
-  ;; Font size
-  ;(define-key global-map (kbd "C-+") 'text-scale-increase)
-  ;(define-key global-map (kbd "C--") 'text-scale-decrease)
-
-  ;; Use regex searches by default.
-  ;; (global-set-key (kbd "C-s") 'isearch-forward-regexp)
-  ;; (global-set-key (kbd "\C-r") 'isearch-backward-regexp)
-  ;; (global-set-key (kbd "M-%") 'query-replace-regexp)
-  ;; (global-set-key (kbd "C-M-s") 'isearch-forward)
-  ;; (global-set-key (kbd "C-M-r") 'isearch-backward)
-  ;; (global-set-key (kbd "C-M-%") 'query-replace)
-
-  ;; Jump to a definition in the current file. (Protip: this is awesome.)
-  (global-set-key (kbd "C-x C-i") 'imenu)
-
-  ;; File finding
-  (global-set-key (kbd "C-x M-f") 'ido-find-file-other-window)
-
-  ;; Window switching. (C-x o goes to the next window)
-  (windmove-default-keybindings) ;; Shift+direction
-  (global-set-key (kbd "C-x O") (lambda () (interactive) (other-window -1))) ;; back one
-  (global-set-key (kbd "C-x C-o") (lambda () (interactive) (other-window 2))) ;; forward two
-
-  ;; Start eshell or switch to it if it's active.
-  (global-set-key (kbd "C-x m") 'eshell)
-
-  ;; Start a new eshell even if one is active.
-  (global-set-key (kbd "C-x M") (lambda () (interactive) (eshell t)))
-
   ;; Help should search more than just commands
   (define-key 'help-command "a" 'apropos)
   )
 
 ;; EShell
+(use-package eshell
+             :conf
+             (setq eshell-save-history-on-exit t
+                   eshell-buffer-shorthand t
+                   eshell-cmpl-dir-ignore "\\`\\(\\.\\.?\\|CVS\\|\\.svn\\|\\.git\\)/\\'"))
 
-(require 'em-hist)
-(setq eshell-cmpl-cycle-completions nil
-      eshell-save-history-on-exit t
-      eshell-buffer-shorthand t
-      eshell-cmpl-dir-ignore "\\`\\(\\.\\.?\\|CVS\\|\\.svn\\|\\.git\\)/\\'")
 (load "~/.emacs.d/eshell-customizations.el")
 
 
@@ -954,22 +890,6 @@
 (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode); Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
 
 
-;; tramp, for sudo access
-(require 'tramp)
-;; keep in mind known issues with zsh - see emacs wiki
-(setq tramp-default-method "ssh")
-
-
-
-
-;; load yasnippet
-(require 'yasnippet)
-(add-to-list 'yas-snippet-dirs my-snippets-dir)
-;(yas-global-mode 1)
-
-;; term-mode does not play well with yasnippet
-(add-hook 'term-mode-hook (lambda ()
-                            (yas-minor-mode -1)))
 
 ;; Dired
 (require 'dired+)
