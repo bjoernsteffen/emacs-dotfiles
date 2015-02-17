@@ -4,7 +4,7 @@
 (add-to-list 'default-frame-alist '(height . 90))
 (add-to-list 'default-frame-alist '(width . 115))
 (add-to-list 'default-frame-alist '(top . 0))
-(add-to-list 'default-frame-alist '(left . 800))
+;(add-to-list 'default-frame-alist '(left . 800))
 
 (when window-system
   (setq frame-title-format '("" "Emacs - %b"))
@@ -21,9 +21,17 @@
       color-theme-is-global t
       sentence-end-double-space nil
       shift-select-mode nil
-      mouse-yank-at-point t
-      oddmuse-directory (concat user-emacs-directory "oddmuse")
-      save-place-file (concat user-emacs-directory "places"))
+      mouse-yank-at-point t)
+
+;; Backup Files
+(setq make-backup-files t
+      vc-make-backup-files t
+      delete-old-versions t
+      kept-new-versions 6
+      kept-old-versions 1
+      version-control t
+      backup-by-copying t
+      )
 
 ;(set-face-attribute 'default nil :font "Monaco-12")
 
@@ -62,6 +70,7 @@
 ;;; Customization interface
 (defconst steffenb-custom-file (locate-user-emacs-file "custom.el")
   "File used to store settings from Customization UI.")
+
 (use-package cus-edit
              :defer t
              :config
@@ -79,7 +88,7 @@
              :if (and (eq system-type 'darwin) (display-graphic-p))
              :init
              (progn
-               (exec-path-from-shell-initialize))
+               (exec-path-from-shell-initialize)))
 
 ;;; OS X support
 (use-package ns-win ; OS X window support
@@ -188,6 +197,7 @@ mouse-3: go to end"))))
 
 ;; Zenburn Theme
 (use-package zenburn-theme
+             :ensure t
              :init (load-theme 'zenburn t))
 
 ;; Ido
@@ -217,6 +227,7 @@ mouse-3: go to end"))))
              :ensure t
              :bind (([remap execute-extended-command] . smex)
                     ("M-X" . smex-major-mode-commands)))
+
 
 (use-package uniquify                   ; Make buffer names unique
   :config (setq uniquify-buffer-name-style 'forward))
@@ -348,6 +359,7 @@ mouse-3: go to end"))))
                                          "/elpa/.*\\'" ; Package files
                                          ;; And all other kinds of boring files
                                          #'ignoramus-boring-p)))
+
 (use-package saveplace ; Save point position in files
              :config (setq-default save-place t))
 
@@ -367,19 +379,23 @@ mouse-3: go to end"))))
              :defer t
              :idle (global-launch-mode))
 
-(set-default indent-tabs-mode nil)
+(setq-default indent-tabs-mode nil)
 ;; Make Tab complete if the line is indented
-(setq tab-always-indent 'complete)
-(set-default require-final-newline t)
-(set-default indicate-empty-lines t)
-(set-default indicate-buffer-boundaries 'left)
-(set-default imenu-auto-rescan t)
+;(setq tab-always-indent 'complete)
+(setq require-final-newline t
+      indicate-empty-lines t)
+
+(setq-default indicate-buffer-boundaries 'left)
+;(set-default imenu-auto-rescan t)
+
+
 
 (use-package electric                   ; Electric code layout
   :init (electric-layout-mode))
 
 (use-package elec-pair                  ; Electric pairs
   :init (electric-pair-mode))
+
 
 (setq-default fill-column 80)
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
@@ -411,7 +427,6 @@ mouse-3: go to end"))))
 
 (bind-key [remap just-one-space] #'cycle-spacing)
 
-
 (use-package outline ; Navigate outlines in buffers
              :defer t
              :init (dolist (hook '(text-mode-hook prog-mode-hook))
@@ -422,7 +437,7 @@ mouse-3: go to end"))))
              :init (global-hl-line-mode 1))
 
 (use-package paren ; Highlight paired delimiters
-             :init (show-paren-mode)
+             :init (show-paren-mode 1)
              :config (setq show-paren-when-point-inside-paren t
                            show-paren-when-point-in-periphery t
                            show-paren-style 'parenthesis))
@@ -503,8 +518,6 @@ mouse-3: go to end"))))
              :diminish flyspell-mode)
 
 (add-hook 'text-mode-hook 'turn-on-flyspell)
-(global-set-key (kbd "C-c j") 'flyspell-check-previous-highlighted-word)
-
 
 (use-package flycheck ; On-the-fly syntax checking
              :ensure t
@@ -525,14 +538,17 @@ mouse-3: go to end"))))
 
 ;; Misc
 
-(use-package gist)
+(use-package gist
+  :ensure t)
 
-(use-package smart-mode-line)
+(use-package volatile-highlights
+  :ensure t)
 
-(use-package volatile-highlights)
+;; LaTeX with AUCTeX
+(use-package tex-site                   ; AUCTeX initialization
+  :ensure auctex)
 
-;; LaTeX
-(use-package auctex
+(use-package tex
              :ensure auctex
              :defer t
              :config
@@ -550,11 +566,12 @@ mouse-3: go to end"))))
                      ;; Provide forward and inverse search with SyncTeX
                      TeX-source-correlate-mode t
                      TeX-source-correlate-method 'synctex
-                     TeX-view-program-selection '((output-pdf "Skim"))
+;                     TeX-source-correlate-start-server t
+                     TeX-view-program-selection '((output-pdf "Skim") (output-dvi "DVI Viewer"))
                      TeX-view-program-list
                      '(("DVI Viewer" "open -a Skim %o")
                        ("Preview" "open -a Preview %o")
-                       ("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline %n %o %b")
+                       ("Skim" "/Applications/Skim.app/Contents/SharedSupport/displayline -r -g %n %o %b")
                        ("HTML Viewer" "open %o")))
                (setq-default TeX-master nil ; Ask for the master file
                              TeX-PDF-mode t)))
@@ -643,9 +660,7 @@ mouse-3: go to end"))))
                        ("renewlist" "{")
                        ("setlistdepth" "{")
                        ("restartlist" "{")))
-               (setcdr (assoc 'caption reftex-default-context-regexps) "\\\\\\(rot\\|sub\\)?caption\\*?[[{]"); Recognize \subcaptions, e.g. reftex-citation
-               )
-
+               ;(setcdr (assoc 'caption reftex-default-context-regexps) "\\\\\\(rot\\|sub\\)?caption\\*?[[{]"); Recognize \subcaptions, e.g. reftex-citation
                (add-hook 'LaTeX-mode-hook #'LaTeX-math-mode)))    ; Easy math input
 
 (use-package bibtex                     ; BibTeX editing
@@ -661,6 +676,12 @@ mouse-3: go to end"))))
                      bibtex-contline-indentation 20
                      bibtex-align-at-equal-sign t)
                ))
+
+;; (use-package auctex-skim                ; Skim as viewer for AUCTeX
+;;   :load-path "lisp/"
+;;   :commands (auctex-skim-select)
+;;   :init (with-eval-after-load 'tex
+;;           (auctex-skim-select)))
 
 (use-package reftex                     ; TeX/BibTeX cross-reference management
   :defer t
@@ -906,7 +927,7 @@ mouse-3: go to end"))))
 (use-package vc-hooks                   ; Simple version control
   :defer t
   ;; Always follow symlinks to files in VCS repos
-  (setq vc-follow-symlinks t))
+  :config (setq vc-follow-symlinks t))
 
 (use-package diff-hl                    ; Highlight hunks in fringe
   :ensure t
@@ -986,7 +1007,6 @@ mouse-3: go to end"))))
 
 (bind-key "H-k" #'describe-personal-keybindings)
 
-
 (use-package visual-line
   :init (global-visual-line-mode 1))
 
@@ -1013,21 +1033,11 @@ mouse-3: go to end"))))
 
 (use-package printing
              :defer t
-             :conf (pr-update-menus t))
+             :config (pr-update-menus t))
 
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (defalias 'auto-tail-revert-mode 'tail-mode)
-
-;; Backup Files
-(setq make-backup-files t
-      vc-make-backup-files t
-      delete-old-versions t
-      kept-new-versions 6
-      kept-old-versions 1
-      version-control t
-      backup-by-copying t
-      )
 
 ;; Key bindings
 (progn
@@ -1037,12 +1047,12 @@ mouse-3: go to end"))))
 
 ;; EShell
 (use-package eshell
-             :conf
-             (setq eshell-save-history-on-exit t
-                   eshell-buffer-shorthand t
-                   eshell-cmpl-dir-ignore "\\`\\(\\.\\.?\\|CVS\\|\\.svn\\|\\.git\\)/\\'"))
-
-(load "~/.emacs.d/eshell-customizations.el")
+  :config
+  (progn
+   (setq eshell-save-history-on-exit t
+	 eshell-buffer-shorthand t
+	 eshell-cmpl-dir-ignore "\\`\\(\\.\\.?\\|CVS\\|\\.svn\\|\\.git\\)/\\'")
+   (load "~/.emacs.d/eshell-customizations.el")))
 
 
 (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode); Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
@@ -1050,11 +1060,7 @@ mouse-3: go to end"))))
 
 (use-package smart-mode-line
              :ensure t
-             :conf (sml/setup))
-
-
-
-(load custom-file)
+             :config (sml/setup))
 
 ;; Start Emacs Server
 (use-package server ; The server of `emacsclient'
