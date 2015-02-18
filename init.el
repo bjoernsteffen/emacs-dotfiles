@@ -2,7 +2,7 @@
 
 ; Size of Frame
 (add-to-list 'default-frame-alist '(height . 90))
-(add-to-list 'default-frame-alist '(width . 115))
+(add-to-list 'default-frame-alist '(width . 120))
 (add-to-list 'default-frame-alist '(top . 0))
 ;(add-to-list 'default-frame-alist '(left . 800))
 
@@ -59,6 +59,8 @@
 (fset 'yes-or-no-p #'y-or-n-p)
 (fset 'display-startup-echo-area-message #'ignore)
 
+(use-package diminish :ensure diminish)
+
 ;; savehist keeps track of some history
 (setq history-length 1000) ; Store more history
 (use-package savehist ; Save minibuffer history
@@ -98,7 +100,7 @@
              (setq ns-pop-up-frames nil ; Don't pop up new frames from the
                                         ; workspace
                    mac-option-modifier nil
-                   mac-command-modifier 'meta 
+                   mac-command-modifier 'meta
                    mac-right-command-modifier 'none
                    mac-right-option-modifier 'none
                    mac-function-modifier 'hyper
@@ -109,7 +111,8 @@
 (cua-selection-mode t)
 (setq cua-auto-tabify-rectangles nil)
 
-(setq utf-translate-cjk-mode nil) ; disable CJK coding/encoding (Chinese/Japanese/Korean characters)
+; disable CJK coding/encoding (Chinese/Japanese/Korean characters)
+(setq utf-translate-cjk-mode nil) 
 (set-language-environment 'utf-8)
 (setq locale-coding-system 'utf-8)
 (set-default-coding-systems 'utf-8)
@@ -121,13 +124,13 @@
       redisplay-dont-pause t)
 ;      scroll-conservatively 100000
 ;      scroll-preserve-screen-position 1)
-      
+
 (setq standard-indent 2)
 
 ;;; The mode line
 
-(setq-default header-line-format
-              '(which-func-mode ("" which-func-format " "))
+(setq-default ;header-line-format
+              ;'(which-func-mode ("" which-func-format " "))
               mode-line-format
               '("%e" mode-line-front-space
                 ;; Standard info about the current buffer
@@ -137,7 +140,7 @@
                 mode-line-remote
                 mode-line-frame-identification
                 mode-line-buffer-identification " " mode-line-position
-                ;; Some specific information about the current buffer:  Indicate
+                ;; Some specific information about the current buffer: Indicate
                 ;; the presence of structured editing, with Paredit or SHM
                 (paredit-mode (:propertize " ()" face bold))
                 (structured-haskell-mode (:propertize shm-lighter face bold))
@@ -185,7 +188,7 @@
   :idle (which-function-mode)
   :idle-priority 1
   :config
-  (setq which-func-unknown "⊥" ; The default is really boring…
+  (setq ;which-func-unknown "⊥" ; The default is really boring…
         which-func-format
         `((:propertize (" ➤ " which-func-current)
                        local-map ,which-func-keymap
@@ -207,6 +210,8 @@ mouse-3: go to end"))))
                      (ido-everywhere))
              :config
              (setq ido-enable-flex-matching t ; Match characters if string doesn't match
+                   ido-everywhere t
+                   ido-enable-tramp-completion t
                    ido-create-new-buffer 'always ; Create a new buffer if nothing matches
                    ido-use-filename-at-point 'guess
                    ;; Visit buffers and files in the selected window
@@ -335,10 +340,10 @@ mouse-3: go to end"))))
              :defer t
              :idle (ignoramus-setup))
 
-(use-package hardhat                    ; Protect user-writable files
-             :ensure t
-             :defer t
-             :idle (global-hardhat-mode))
+(use-package hardhat
+  :ensure hardhat
+  :idle (global-hardhat-mode 1)
+  :config (setq hardhat-mode-lighter nil))
 
 (use-package bookmark ; Bookmarks for Emacs buffers
              :bind (("H-b l" . list-bookmarks))
@@ -346,10 +351,9 @@ mouse-3: go to end"))))
              :config (setq bookmark-save-flag 1))
 
 (use-package recentf ; Save recently visited files
-             :defer t
-             :idle (recentf-mode)
+             :idle (recentf-mode 1)
              :config
-             (setq recentf-max-saved-items 200
+             (setq recentf-max-saved-items 100
                    recentf-max-menu-items 15
                    ;; Cleanup recent files only when Emacs is idle, but not when the mode
                    ;; is enabled, because that unnecessarily slows down Emacs. My Emacs
@@ -490,6 +494,25 @@ mouse-3: go to end"))))
                (add-to-list 'company-backends 'company-math-symbols-unicode)
                (add-to-list 'company-backends 'company-math-symbols-latex)))
 
+
+(use-package prog-mode
+  :defer t
+  :config
+  (progn
+    (use-package eldoc
+      :diminish ""
+      :defer t
+      :init (add-hook 'prog-mode-hook 'eldoc-mode))
+    (use-package hl-todo
+      :ensure hl-todo
+      :defer t
+      :init (add-hook 'prog-mode-hook 'hl-todo-mode))
+    (use-package hl-sexp
+      :ensure hl-sexp
+      :defer t
+      :init
+      (add-hook 'prog-mode-hook 'hl-sexp-mode))))
+
 ;;; Spelling and syntax checking
 (use-package ispell ; Spell checking
              :defer t
@@ -519,17 +542,32 @@ mouse-3: go to end"))))
 
 (add-hook 'text-mode-hook 'turn-on-flyspell)
 
-(use-package flycheck ; On-the-fly syntax checking
-             :ensure t
-             :bind (("C-c l e" . list-flycheck-errors)
-                    ("C-c T f" . flycheck-mode))
-             :init (global-flycheck-mode)
-             :config
-             (progn
-               (setq flycheck-completion-system 'ido)
-               ;; Use italic face for checker name
-               (set-face-attribute 'flycheck-error-list-checker-name nil :inherit 'italic))
-             :diminish flycheck-mode)
+;; ** Syntax checking
+(use-package flycheck
+  :ensure flycheck
+  :defer t
+  :diminish ""
+  :init (add-hook 'prog-mode-hook 'flycheck-mode)
+  :config
+  (progn
+    (setq flycheck-completion-system 'ido)
+    (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+    (defvar flycheck-mode-line-lighter " *")
+    (use-package flycheck-color-mode-line
+      :ensure flycheck-color-mode-line
+      :init (add-hook 'flycheck-mode-hook 'flycheck-color-mode-line-mode))))
+
+;; (use-package flycheck ; On-the-fly syntax checking
+;;              :ensure t
+;;              :bind (("C-c l e" . list-flycheck-errors)
+;;                     ("C-c T f" . flycheck-mode))
+;;              :init (global-flycheck-mode)
+;;              :config
+;;              (progn
+;;                (setq flycheck-completion-system 'ido)
+;;                ;; Use italic face for checker name
+;;                (set-face-attribute 'flycheck-error-list-checker-name nil :inherit 'italic))
+;;              :diminish flycheck-mode)
 (use-package flycheck-pos-tip ; Show Flycheck messages in popups
              :ensure t
              :defer t
@@ -637,7 +675,7 @@ mouse-3: go to end"))))
                 '("cpageref" TeX-arg-ref)
                 '("Cpageref" TeX-arg-ref)
                 '("subref" TeX-arg-ref))
-               
+
                (setq font-latex-match-textual-keywords
                      '(
                        ;; biblatex brackets
@@ -648,7 +686,7 @@ mouse-3: go to end"))))
                        ("subcaption" "[{")
                        ("subcaptionbox" "*[{[[")
                        ("captionof" "*[{{")))
-               
+
                (setq font-latex-match-variable-keywords
                      '(
                        ;; amsmath
@@ -669,7 +707,7 @@ mouse-3: go to end"))))
              (progn
                ;; Run prog mode hooks for bibtex
                (add-hook 'bibtex-mode-hook (lambda () (run-hooks 'prog-mode-hook)))
-               
+
                ;; Use a modern BibTeX dialect
                (bibtex-set-dialect 'biblatex)
                (setq bibtex-text-indentation 19
@@ -762,34 +800,34 @@ mouse-3: go to end"))))
              ("supercite" "{")
              ;; Qualified citation lists
              ("cites" "[{")
-	     ("Cites" "[{")
-	     ("parencites" "[{")
-	     ("Parencites" "[{")
-	     ("footcites" "[{")
-	     ("footcitetexts" "[{")
-	     ("smartcites" "[{")
-	     ("Smartcites" "[{")
-	     ("textcites" "[{")
-	     ("Textcites" "[{")
-	     ("supercites" "[{")
-	     ;; Style-independent commands
-	     ("autocite" "[[{")
-	     ("Autocite" "[[{")
-	     ("autocite*" "[[{")
-	     ("Autocite*" "[[{")
-	     ("autocites" "[{")
-	     ("Autocites" "[{")
-	     ;; Text commands
-	     ("citeauthor" "[[{")
-	     ("Citeauthor" "[[{")
-	     ("citetitle" "[[{")
-	     ("citetitle*" "[[{")
-	     ("citeyear" "[[{")
-	     ("citedate" "[[{")
-	     ("citeurl" "[[{")
-	     ;; Special commands
-	     ("fullcite" "[[{")))
-    
+             ("Cites" "[{")
+             ("parencites" "[{")
+             ("Parencites" "[{")
+             ("footcites" "[{")
+             ("footcitetexts" "[{")
+             ("smartcites" "[{")
+             ("Smartcites" "[{")
+             ("textcites" "[{")
+             ("Textcites" "[{")
+             ("supercites" "[{")
+             ;; Style-independent commands
+             ("autocite" "[[{")
+             ("Autocite" "[[{")
+             ("autocite*" "[[{")
+             ("Autocite*" "[[{")
+             ("autocites" "[{")
+             ("Autocites" "[{")
+             ;; Text commands
+             ("citeauthor" "[[{")
+             ("Citeauthor" "[[{")
+             ("citetitle" "[[{")
+             ("citetitle*" "[[{")
+             ("citeyear" "[[{")
+             ("citedate" "[[{")
+             ("citeurl" "[[{")
+             ;; Special commands
+             ("fullcite" "[[{")))
+
     ;; Provide basic RefTeX support for biblatex
     (unless (assq 'biblatex reftex-cite-format-builtin)
       (add-to-list 'reftex-cite-format-builtin
@@ -814,7 +852,7 @@ mouse-3: go to end"))))
 
 
 (add-hook 'TeX-language-de-hook
-	  (lambda () (ispell-change-dictionary "de_CH")))
+          (lambda () (ispell-change-dictionary "de_CH")))
 (add-hook 'TeX-language-en-hook
           (lambda () (ispell-change-dictionary "en_US")))
 
@@ -844,11 +882,29 @@ mouse-3: go to end"))))
                                         ; error
           )))
 
+(use-package iedit
+  :ensure iedit
+  :bind ("C-;" . iedit-mode))
+
 (use-package highlight-numbers          ; Fontify number literals
   :ensure t
   :defer t
   :init
   (add-hook 'prog-mode-hook #'highlight-numbers-mode))
+
+(use-package highlight-symbol
+  :ensure highlight-symbol
+  :defer t
+  :diminish ""
+  :init
+  (progn
+    (add-hook 'prog-mode-hook 'highlight-symbol-mode)
+    (add-hook 'prog-mode-hook 'highlight-symbol-nav-mode))
+  :config
+  (progn
+    (setq highlight-symbol-on-navigation-p nil
+          highlight-symbol-idle-delay 1)
+    (bind-key "C-%" 'highlight-symbol-query-replace highlight-symbol-nav-mode-map)))
 
 (use-package paredit                    ; Balanced sexp editing
   :ensure t
@@ -1049,11 +1105,39 @@ mouse-3: go to end"))))
 (use-package eshell
   :config
   (progn
-   (setq eshell-save-history-on-exit t
-	 eshell-buffer-shorthand t
-	 eshell-cmpl-dir-ignore "\\`\\(\\.\\.?\\|CVS\\|\\.svn\\|\\.git\\)/\\'")
-   (load "~/.emacs.d/eshell-customizations.el")))
-
+    ;; Scrolling
+    (setq eshell-scroll-to-bottom-on-output t
+          eshell-scroll-show-maximum-output t
+          eshell-save-history-on-exit t
+          eshell-buffer-shorthand t)
+    (use-package esh-mode
+      :defer t
+      :config
+      (progn
+        (defun eshell/cds ()
+          (eshell/cd (or (locate-dominating-file default-directory "src")
+                         (locate-dominating-file default-directory ".git"))))
+        (defun eshell/clear ()
+          (interactive)
+          (let ((inhibit-read-only t))
+            (delete-region (point-min) (point-max)))
+          (eshell-send-input))
+        (add-hook 'eshell-mode-hook
+                  #'(lambda ()
+                      (bind-key "C-l" 'eshell/clear eshell-mode-map)))))
+    (use-package eshell-opt
+      :config
+      (use-package eshell-prompt-extras
+        :ensure eshell-prompt-extras))
+    (use-package em-term
+      :defer t
+      :config
+      (setq eshell-visual-commands
+            (append '("tmux" "screen" "ssh") eshell-visual-commands)))
+    (use-package em-hist
+      :defer t
+      :config
+      (setq eshell-hist-ignoredups t))))
 
 (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode); Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
 
@@ -1068,3 +1152,15 @@ mouse-3: go to end"))))
              :idle (server-start))
 
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages (quote (use-package))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

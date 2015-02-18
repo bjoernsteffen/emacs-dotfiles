@@ -7,3 +7,8 @@
 /.emacs.desktop.lock
 /url/cookies
 /tramp
+/custom.el
+/.smex-items
+/history
+/places
+/smex-items
