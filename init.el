@@ -104,7 +104,7 @@
                    mac-right-command-modifier 'none
                    mac-right-option-modifier 'none
                    mac-function-modifier 'hyper
-                   x-select-enable-clipboard t))
+                   select-enable-clipboard t))
 
 
 ;; CUA selection mode for tables
@@ -148,14 +148,6 @@
                 (structured-haskell-mode (:propertize shm-lighter face bold))
                 (structured-haskell-repl-mode (:propertize shm-lighter
                                                            face bold))
-                ;; Warn if whitespace isn't highlighted or cleaned in this
-                ;; buffer.
-                (:eval (unless buffer-read-only
-                         (cond
-                          ((not (bound-and-true-p whitespace-mode))
-                           (propertize " SPACE" 'face '(bold error)))
-                          ((not (bound-and-true-p whitespace-cleanup-mode))
-                           (propertize " WSC" 'face 'warning)))))
                 (projectile-mode projectile-mode-line)
                 (vc-mode vc-mode)
                 (flycheck-mode flycheck-mode-line) ; Flycheck status
@@ -356,7 +348,7 @@ mouse-3: go to end"))))
              :idle (recentf-mode 1)
              :config
              (setq recentf-max-saved-items 100
-                   recentf-max-menu-items 15
+                   recentf-max-menu-items 5
                    ;; Cleanup recent files only when Emacs is idle, but not when the mode
                    ;; is enabled, because that unnecessarily slows down Emacs. My Emacs
                    ;; idles often enough to have the recent files list clean up regularly
@@ -365,6 +357,16 @@ mouse-3: go to end"))))
                                          "/elpa/.*\\'" ; Package files
                                          ;; And all other kinds of boring files
                                          #'ignoramus-boring-p)))
+
+(defun ido-recentf-open ()
+  "Use `ido-completing-read' to \\[find-file] a recent file"
+  (interactive)
+  (if (find-file (ido-completing-read "Find recent file: " recentf-list))
+      (message "Opening file...")
+    (message "Aborting")))
+;; get rid of `find-file-read-only' and replace it with something
+;; more useful.
+(global-set-key (kbd "C-x C-r") 'ido-recentf-open)
 
 (use-package saveplace ; Save point position in files
              :config (setq-default save-place t))
