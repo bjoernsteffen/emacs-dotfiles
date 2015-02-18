@@ -1110,6 +1110,7 @@ mouse-3: go to end"))))
 
 ;; EShell
 (use-package eshell
+  :bind ("H-e" . eshell)
   :config
   (progn
     ;; Scrolling
@@ -1144,14 +1145,21 @@ mouse-3: go to end"))))
     (use-package em-hist
       :defer t
       :config
-      (setq eshell-hist-ignoredups t))))
+      (setq eshell-hist-ignoredups t)))
+  (use-package em-smart
+    :config (progn
+              (setq eshell-where-to-jump 'begin)
+              (setq eshell-review-quick-commands nil)
+              (setq eshell-smart-space-goes-to-end t))))
 
 (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode); Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
 
 
 (use-package smart-mode-line
-             :ensure t
-             :config (sml/setup))
+  :ensure t
+  :config (progn
+            (sml/setup)
+            (sml/apply-theme 'respectful)))
 
 ;; Start Emacs Server
 (use-package server ; The server of `emacsclient'
