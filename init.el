@@ -122,7 +122,9 @@
 ;; nice scrolling
 (setq scroll-margin 5
       redisplay-dont-pause t)
-;      scroll-conservatively 100000
+(setq scroll-conservatively 100000)
+(setq mouse-wheel-progressive-speed nil)
+(setq save-interprogram-paste-before-kill t)
 ;      scroll-preserve-screen-position 1)
 
 (setq standard-indent 2)
@@ -416,6 +418,7 @@ mouse-3: go to end"))))
 (use-package visual-fill-column
              :ensure t
              :defer t
+             :disabled t
              :init (add-hook 'visual-line-mode-hook #'visual-fill-column-mode)
              ;; Keep the fringe
              :config (setq visual-fill-column-disable-fringe nil))
@@ -909,6 +912,7 @@ mouse-3: go to end"))))
 (use-package paredit                    ; Balanced sexp editing
   :ensure t
   :defer t
+  :disabled t
   :init
   (progn
     (dolist (hook '(eval-expression-minibuffer-setup-hook
@@ -986,7 +990,7 @@ mouse-3: go to end"))))
   :config (setq vc-follow-symlinks t))
 
 (use-package diff-hl                    ; Highlight hunks in fringe
-  :ensure t
+  :ensure diff-hl
   :defer t
   :init
   (progn
@@ -1064,11 +1068,12 @@ mouse-3: go to end"))))
 (bind-key "H-k" #'describe-personal-keybindings)
 
 (use-package visual-line
-  :init (global-visual-line-mode 1))
+  :init (global-visual-line-mode 1)
+  :config (setq visual-line-fringe-indicators '(left-curly-arrow right-curly-arrow)))
 
 (column-number-mode t)
 
-(use-package delsel                     ; Delete the selection instead of insert
+(use-package delsel ; Delete the selection instead of insert
   :defer t
   :init (delete-selection-mode))
 
@@ -1152,15 +1157,3 @@ mouse-3: go to end"))))
              :idle (server-start))
 
 ;;; init.el ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages (quote (use-package))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
