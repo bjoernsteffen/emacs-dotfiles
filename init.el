@@ -4,7 +4,7 @@
 (add-to-list 'default-frame-alist '(height . 90))
 (add-to-list 'default-frame-alist '(width . 120))
 (add-to-list 'default-frame-alist '(top . 0))
-;(add-to-list 'default-frame-alist '(left . 800))
+(add-to-list 'default-frame-alist '(left . 800))
 
 (when window-system
   (setq frame-title-format '("" "Emacs - %b"))
@@ -72,6 +72,52 @@
 ;;; Customization interface
 (defconst steffenb-custom-file (locate-user-emacs-file "custom.el")
   "File used to store settings from Customization UI.")
+
+(use-package dynamic-fonts              ; Select best available font
+  :ensure t
+  :init
+  (progn
+    (setq dynamic-fonts-preferred-monospace-fonts
+          '(
+            ;; Best fonts
+            "Source Code Pro"   ; https://github.com/adobe-fonts/source-code-pro
+            "Anonymous Pro" ; http://www.marksimonson.com/fonts/view/anonymous-pro
+            ;; Consolas and its free alternative.  Ok, but not my preference
+            "Inconsolata"
+            "Consolas"
+            ;; Also still kind of ok
+            "Fira Mono"
+            ;; System fonts, as last resort
+            "Menlo"
+            "DejaVu Sans Mono"
+            "Bitstream Vera Mono"
+            "Courier New")
+          dynamic-fonts-preferred-monospace-point-size (pcase system-type
+                                                         (`darwin 13)
+                                                         (_ 10))
+          dynamic-fonts-preferred-proportional-fonts
+          '(
+            ;; Best, from
+            ;; https://www.mozilla.org/en-US/styleguide/products/firefox-os/typeface/
+            "Fira Sans"
+            ;; System fonts, as last resort
+            "Helvetica"
+            "Segoe UI"
+            "DejaVu Sans"
+            "Bitstream Vera"
+            "Tahoma"
+            "Verdana"
+            "Arial Unicode MS"
+            "Arial")
+          dynamic-fonts-preferred-proportional-point-size (pcase system-type
+                                                            (`darwin 13)
+                                                            (_ 10)))
+
+    (dynamic-fonts-setup)))
+
+(use-package unicode-fonts              ; Map Unicode blocks to fonts
+  :ensure t
+  :init (unicode-fonts-setup))
 
 (use-package cus-edit
              :defer t
@@ -1167,3 +1213,17 @@ mouse-3: go to end"))))
              :idle (server-start))
 
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (unicode-fonts dynamic-fonts zenburn-theme volatile-highlights visual-fill-column use-package smex smart-mode-line-powerline-theme rainbow-delimiters paredit markdown-mode magit launch iedit ido-ubiquitous ibuffer-vc hl-todo hl-sexp highlight-symbol highlight-numbers hardhat gitignore-mode gitconfig-mode gitattributes-mode git-timemachine gist flycheck-pos-tip flycheck-color-mode-line flx-ido feature-mode expand-region exec-path-from-shell eshell-prompt-extras easy-kill diff-hl company-math company-anaconda auctex anzu adaptive-wrap))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
