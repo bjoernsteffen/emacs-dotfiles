@@ -69,9 +69,6 @@
                            savehist-autosave-interval 180
                            savehist-additional-variables '(search ring regexp-search-ring)))
 
-;;; Customization interface
-(defconst steffenb-custom-file (locate-user-emacs-file "custom.el")
-  "File used to store settings from Customization UI.")
 
 (use-package dynamic-fonts              ; Select best available font
   :ensure t
@@ -118,6 +115,10 @@
 (use-package unicode-fonts              ; Map Unicode blocks to fonts
   :ensure t
   :init (unicode-fonts-setup))
+
+;;; Customization interface
+(defconst steffenb-custom-file (locate-user-emacs-file "custom.el")
+  "File used to store settings from Customization UI.")
 
 (use-package cus-edit
              :defer t
@@ -166,8 +167,7 @@
 (prefer-coding-system 'utf-8)
 
 ;; nice scrolling
-(setq scroll-margin 5
-      redisplay-dont-pause t)
+(setq scroll-margin 5)
 (setq scroll-conservatively 100000)
 (setq mouse-wheel-progressive-speed nil)
 (setq save-interprogram-paste-before-kill t)
@@ -252,8 +252,10 @@ mouse-3: go to end"))))
              (setq ido-enable-flex-matching t ; Match characters if string doesn't match
                    ido-everywhere t
                    ido-enable-tramp-completion t
+                   ido-ignore-extensions t
                    ido-create-new-buffer 'always ; Create a new buffer if nothing matches
                    ido-use-filename-at-point 'guess
+                   ido-file-extensions-order '(".tex" ".txt" ".py" ".el")
                    ;; Visit buffers and files in the selected window
                    ido-default-file-method 'selected-window
                    ido-default-buffer-method 'selected-window
@@ -647,7 +649,7 @@ mouse-3: go to end"))))
                      TeX-auto-save t ; Automatically save style information
                      TeX-electric-sub-and-superscript t ; Automatically insert braces after
                                         ; sub- and superscripts in math mode
-                     ;TeX-electric-math '("\\(" "\\)")
+                     TeX-electric-math '("\\(" "\\)")
                      ;; Don't insert magic quotes right away.
                      ;TeX-quote-after-quote t
                      ;; Don't ask for confirmation when cleaning
@@ -940,8 +942,10 @@ mouse-3: go to end"))))
 (use-package highlight-numbers          ; Fontify number literals
   :ensure t
   :defer t
-  :init
-  (add-hook 'prog-mode-hook #'highlight-numbers-mode))
+  :init (progn
+          (add-hook 'prog-mode-hook #'highlight-numbers-mode)
+          (add-hook 'text-mode-hook #'highlight-numbers-mode)
+          (add-hook 'LaTeX-mode #'highlight-numbers-mode)))
 
 (use-package highlight-symbol
   :ensure highlight-symbol
@@ -1213,17 +1217,3 @@ mouse-3: go to end"))))
              :idle (server-start))
 
 ;;; init.el ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (unicode-fonts dynamic-fonts zenburn-theme volatile-highlights visual-fill-column use-package smex smart-mode-line-powerline-theme rainbow-delimiters paredit markdown-mode magit launch iedit ido-ubiquitous ibuffer-vc hl-todo hl-sexp highlight-symbol highlight-numbers hardhat gitignore-mode gitconfig-mode gitattributes-mode git-timemachine gist flycheck-pos-tip flycheck-color-mode-line flx-ido feature-mode expand-region exec-path-from-shell eshell-prompt-extras easy-kill diff-hl company-math company-anaconda auctex anzu adaptive-wrap))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
