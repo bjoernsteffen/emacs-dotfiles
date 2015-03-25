@@ -38,7 +38,9 @@
 ;; Please don't load outdated byte code
 (setq load-prefer-newer t)
 
+
 (require 'package)
+
 (setq package-enable-at-startup nil)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
 
@@ -49,7 +51,10 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
-(require 'use-package)
+(eval-when-compile
+  (require 'use-package))
+(require 'diminish)                ;; if you use :diminish
+(require 'bind-key)                ;; if you use any :bind variant
 
 (require 'subr-x)
 (require 'rx)
@@ -225,8 +230,6 @@
 
 (use-package which-func                 ; Current function name in header line
   :defer t
-  :idle (which-function-mode)
-  :idle-priority 1
   :config
   (setq ;which-func-unknown "⊥" ; The default is really boring…
         which-func-format
@@ -315,10 +318,10 @@ mouse-3: go to end"))))
 
 ; Windmove
 (use-package windmove ; Move between windows with Shift+Arrow
-             :bind (((kbd "S-<left>") . windmove-left)
-                    ((kbd "S-<right>") . windmove-right)
-                    ((kbd "S-<up>") . windmove-up)
-                    ((kbd "S-<down>") . windmove-down)))
+             :bind (( "S-<left>" . windmove-left)
+                    ( "S-<right>" . windmove-right)
+                    ( "S-<up>" . windmove-up)
+                    ( "S-<down>" . windmove-down)))
 (use-package winner                     ; Undo and redo window configurations
              :init (winner-mode))
 
@@ -380,12 +383,12 @@ mouse-3: go to end"))))
 (use-package ignoramus ; Ignore uninteresting files everywhere
              :ensure t
              :defer t
-             :idle (ignoramus-setup))
+             :config (ignoramus-setup))
 
 (use-package hardhat
   :ensure hardhat
-  :idle (global-hardhat-mode 1)
-  :config (setq hardhat-mode-lighter nil))
+  :config (progn (setq hardhat-mode-lighter nil)
+		 (global-hardhat-mode 1)))
 
 (use-package bookmark ; Bookmarks for Emacs buffers
              :bind (("H-b l" . list-bookmarks))
@@ -393,8 +396,8 @@ mouse-3: go to end"))))
              :config (setq bookmark-save-flag 1))
 
 (use-package recentf ; Save recently visited files
-             :idle (recentf-mode 1)
              :config
+	     (progn
              (setq recentf-max-saved-items 100
                    recentf-max-menu-items 5
                    ;; Cleanup recent files only when Emacs is idle, but not when the mode
@@ -404,7 +407,8 @@ mouse-3: go to end"))))
                    recentf-exclude (list "/\\.git/.*\\'" ; Git contents
                                          "/elpa/.*\\'" ; Package files
                                          ;; And all other kinds of boring files
-                                         #'ignoramus-boring-p)))
+                                         #'ignoramus-boring-p))
+	     (recentf-mode 1)))
 
 (defun ido-recentf-open ()
   "Use `ido-completing-read' to \\[find-file] a recent file"
@@ -433,11 +437,11 @@ mouse-3: go to end"))))
 (use-package launch ; Open files in external programs
              :ensure t
              :defer t
-             :idle (global-launch-mode))
+             :config (global-launch-mode))
 
 (setq-default indent-tabs-mode nil)
 ;; Make Tab complete if the line is indented
-;(setq tab-always-indent 'complete)
+(setq tab-always-indent 'complete)
 (setq require-final-newline t
       indicate-empty-lines t)
 
@@ -528,15 +532,14 @@ mouse-3: go to end"))))
 
 (use-package company ; Graphical (auto-)completion
              :ensure t
-             :defer t
-             :idle (global-company-mode)
              :config
              (progn
                ;; Use Company for completion
                (bind-key [remap completion-at-point] #'company-complete company-mode-map)
                (setq company-tooltip-align-annotations t
                      ;; Easy navigation to candidates with M-<n>
-                     company-show-numbers t))
+                     company-show-numbers t)
+	       (global-company-mode))
              :diminish company-mode)
 (use-package company-math ; Completion for Math symbols
              :ensure t
@@ -577,12 +580,12 @@ mouse-3: go to end"))))
                                         ; ispell-choices-win-default-height 5
                    ))
 (use-package flyspell ; On-the-fly spell checking
-             :bind (("C-c j" . flyspell-check-previous-higlighted-word))
              :init
              (progn
                (dolist (hook '(text-mode-hook message-mode-hook))
                  (add-hook hook 'turn-on-flyspell))
-               (add-hook 'prog-mode-hook 'flyspell-prog-mode))
+               (add-hook 'prog-mode-hook 'flyspell-prog-mode)
+               (bind-key "H-." 'flyspell-check-previous-higlighted-word))
              :config
              (progn
                (setq flyspell-use-meta-tab nil
@@ -642,6 +645,7 @@ mouse-3: go to end"))))
 (use-package tex
              :ensure auctex
              :defer t
+             :bind (("M-g l" . TeX-error-overview))
              :config
              (progn
                (setq TeX-parse-self t ; Parse documents to provide completion
@@ -649,7 +653,7 @@ mouse-3: go to end"))))
                      TeX-auto-save t ; Automatically save style information
                      TeX-electric-sub-and-superscript t ; Automatically insert braces after
                                         ; sub- and superscripts in math mode
-                     TeX-electric-math '("\\(" "\\)")
+                     TeX-electric-math (cons "\\(" "\\)")
                      ;; Don't insert magic quotes right away.
                      ;TeX-quote-after-quote t
                      ;; Don't ask for confirmation when cleaning
@@ -657,7 +661,7 @@ mouse-3: go to end"))))
                      ;; Provide forward and inverse search with SyncTeX
                      TeX-source-correlate-mode t
                      TeX-source-correlate-method 'synctex
-;                     TeX-source-correlate-start-server t
+                     TeX-source-correlate-start-server t
                      TeX-view-program-selection '((output-pdf "Skim") (output-dvi "DVI Viewer"))
                      TeX-view-program-list
                      '(("DVI Viewer" "open -a Skim %o")
@@ -924,6 +928,10 @@ mouse-3: go to end"))))
         (LaTeX-newline)))))
 (ad-activate 'LaTeX-fill-region-as-paragraph)
 
+(use-package company-auctex
+  :ensure t
+  :config (company-auctex-init))
+
 ;;; Programming utilities
 (use-package compile                    ; Compile from Emacs
   :config
@@ -998,7 +1006,7 @@ mouse-3: go to end"))))
     ;; Use a decent syntax and style checker
     (setq python-check-command "pylint"
           ;; Use IPython as interpreter
-          python-shell-interpreter "ipython"
+          python-shell-interpreter "python"
           python-shell-interpreter-args "-i")))
 (use-package anaconda-mode              ; Powerful Python backend for Emacs
   :ensure t
@@ -1101,6 +1109,9 @@ mouse-3: go to end"))))
   :defer t)
 
 (use-package git-timemachine            ; Go back in Git time
+  :ensure t)
+
+(use-package org
   :ensure t)
 
 ;; Calendar and Time settings
@@ -1214,6 +1225,6 @@ mouse-3: go to end"))))
 ;; Start Emacs Server
 (use-package server ; The server of `emacsclient'
              :defer t
-             :idle (server-start))
+             :config (server-start))
 
 ;;; init.el ends here
