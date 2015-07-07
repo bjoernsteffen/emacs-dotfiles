@@ -1083,14 +1083,7 @@ mouse-3: go to end"))))
           magit-diff-refine-hunk t
           ;; ask me if I want to include a revision when rewriting
           magit-rewrite-inclusive 'ask)
-
-    ;; Auto-revert files after Magit operations
-    (magit-auto-revert-mode))
-  :diminish magit-auto-revert-mode)
-
-(use-package git-commit-mode            ; Git commit message mode
-  :ensure t
-  :defer t)
+    ))
 
 (use-package gitconfig-mode             ; Git configuration mode
   :ensure t
@@ -1101,10 +1094,6 @@ mouse-3: go to end"))))
   :defer t)
 
 (use-package gitattributes-mode         ; Git attributes mode
-  :ensure t
-  :defer t)
-
-(use-package git-rebase-mode            ; Mode for git rebase -i
   :ensure t
   :defer t)
 
@@ -1156,7 +1145,6 @@ mouse-3: go to end"))))
 (put 'downcase-region 'disabled nil)
 
 (use-package printing
-             :defer t
              :config (pr-update-menus t))
 
 
