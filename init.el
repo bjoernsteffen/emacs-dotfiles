@@ -317,13 +317,17 @@ mouse-3: go to end"))))
                                  (ibuffer-do-sort-by-alphabetic)))))
 
 ; Windmove
-(use-package windmove ; Move between windows with Shift+Arrow
-             :bind (( "S-<left>" . windmove-left)
-                    ( "S-<right>" . windmove-right)
-                    ( "S-<up>" . windmove-up)
-                    ( "S-<down>" . windmove-down)))
+;; (use-package windmove ; Move between windows with Shift+Arrow
+;;              :bind (( "S-<left>" . windmove-left)
+;;                     ( "S-<right>" . windmove-right)
+;;                     ( "S-<up>" . windmove-up)
+;;                     ( "S-<down>" . windmove-down)))
 (use-package winner                     ; Undo and redo window configurations
-             :init (winner-mode))
+  :init (winner-mode))
+
+(use-package ace-window
+  :ensure t
+  :bind (("H-w" . ace-window)))
 
 (use-package ediff-wind
              :defer t
@@ -379,6 +383,15 @@ mouse-3: go to end"))))
 ;; if there is a dired buffer displayed in the next window, use its
 ;; current subdir, instead of the current subdir of this dired buffer
 (setq dired-dwim-target t)
+
+;; Ranger
+;; (use-package ranger
+;;   :ensure t
+;;   :config
+;;   (progn 
+;;   (setq ranger-cleanup-on-disable t)
+;;   (setq ranger-width-parents 0.2)
+;;   ))
 
 (use-package ignoramus ; Ignore uninteresting files everywhere
              :ensure t
