@@ -327,6 +327,7 @@ mouse-3: go to end"))))
 
 (use-package ace-window
   :ensure t
+  :config (setq aw-background nil)
   :bind (("H-w" . ace-window)))
 
 (use-package ediff-wind
@@ -407,6 +408,14 @@ mouse-3: go to end"))))
              :bind (("H-b l" . list-bookmarks))
              ;; Save bookmarks immediately after a bookmark was added
              :config (setq bookmark-save-flag 1))
+
+;; Visible Bookmarks
+(use-package bm
+  :ensure t
+  :config (setq bm-highlight-style 'bm-highlight-only-fringe
+                bm-marker 'bm-marker-right)
+  :bind (("<right-fringe> <mouse-1>" . bm-toggle-mouse))
+)
 
 (use-package recentf ; Save recently visited files
              :config
