@@ -25,7 +25,7 @@
 
 ;; Backup Files
 (setq make-backup-files t
-      vc-make-backup-files t
+      vc-make-backup-files nil
       delete-old-versions t
       kept-new-versions 6
       kept-old-versions 1
@@ -358,7 +358,6 @@ mouse-3: go to end"))))
              :defer t
              :config
              (progn
-               (require 'dired-x)
                (setq dired-auto-revert-buffer t ; Revert on re-visiting
                      ;; Better dired flags: `-l' is mandatory, `-a' shows all files, `-h'
                      ;; uses human-readable sizes, and `-F' appends file-type classifiers
@@ -606,8 +605,7 @@ mouse-3: go to end"))))
              (progn
                (dolist (hook '(text-mode-hook message-mode-hook))
                  (add-hook hook 'turn-on-flyspell))
-               (add-hook 'prog-mode-hook 'flyspell-prog-mode)
-               (bind-key "H-." 'flyspell-check-previous-higlighted-word))
+               (add-hook 'prog-mode-hook 'flyspell-prog-mode))
              :config
              (progn
                (setq flyspell-use-meta-tab nil
@@ -616,6 +614,7 @@ mouse-3: go to end"))))
                      flyspell-issue-message-flag nil)
                ;; Free C-M-i for completion
                (define-key flyspell-mode-map "\M-\t" nil))
+             :bind (("H-$" . flyspell-check-previous-highlighted-word))
              :diminish flyspell-mode)
 
 (add-hook 'text-mode-hook 'turn-on-flyspell)
@@ -733,6 +732,7 @@ mouse-3: go to end"))))
                                          (,(rx (0+ space) "\\minisec{") 5))
                      ;; No language-specific hyphens please
                      LaTeX-babel-hyphen nil)
+               (setq LaTeX-fill-break-at-separators (quote (\\\( \\\[ \\\])))
                (LaTeX-add-environments
                 '("definition" LaTeX-env-label)
                 '("lemma" LaTeX-env-label)
@@ -1099,6 +1099,7 @@ mouse-3: go to end"))))
           magit-save-some-buffers t
           magit-stage-all-confirm nil
           magit-unstage-all-confirm nil
+          magit-push-always-verify nil
           ;; Except when you ask something useful…
           magit-set-upstream-on-push t
           ;; don't put "origin-" in front of new branch names by default
