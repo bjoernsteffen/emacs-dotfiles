@@ -222,6 +222,9 @@
 (line-number-mode)
 (column-number-mode)
 
+(use-package paradox
+  :ensure t)
+
 (use-package anzu                       ; Position/matches count for isearch
   :ensure t
   :init (global-anzu-mode)
@@ -1229,6 +1232,14 @@ mouse-3: go to end"))))
               (setq eshell-smart-space-goes-to-end t))))
 
 (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode); Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
+
+(use-package gnuplot-mode
+  :ensure t
+  :config (progn
+            ;; automatically open files ending with .gp or .gnuplot in gnuplot mode
+            (setq auto-mode-alist 
+                  (append '(("\\.\\(gp\\|gnuplot\\)$" . gnuplot-mode)) auto-mode-alist))
+            ))
 
 
 (use-package smart-mode-line
