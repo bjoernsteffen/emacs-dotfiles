@@ -781,7 +781,8 @@ mouse-3: go to end"))))
                        ("setlistdepth" "{")
                        ("restartlist" "{")))
                ;(setcdr (assoc 'caption reftex-default-context-regexps) "\\\\\\(rot\\|sub\\)?caption\\*?[[{]"); Recognize \subcaptions, e.g. reftex-citation
-               (add-hook 'LaTeX-mode-hook #'LaTeX-math-mode)))    ; Easy math input
+               (add-hook 'LaTeX-mode-hook #'LaTeX-math-mode)     ; Easy math input
+               (font-lock-add-keywords 'latex-mode '(("~" 0                                      'font-latex-sedate-face)))))
 
 (use-package bibtex                     ; BibTeX editing
              :defer t
