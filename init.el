@@ -1242,6 +1242,14 @@ mouse-3: go to end"))))
                   (append '(("\\.\\(gp\\|gnuplot\\)$" . gnuplot-mode)) auto-mode-alist))
             ))
 
+(use-package deft
+  :ensure t
+  :config (progn
+            (setq deft-directory "~/Dropbox/notes")
+            (setq deft-use-filter-string-for-filename t))
+  :bind (("H-d" . deft))
+  )
+
 
 (use-package smart-mode-line
   :ensure t
