@@ -136,6 +136,8 @@
                    custom-unlispify-menu-entries nil)
              :init (load steffenb-custom-file 'no-error 'no-message))
 
+(use-package iedit)
+
 ;;; Environment fixup
 (use-package exec-path-from-shell
              :ensure t
