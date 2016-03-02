@@ -378,6 +378,16 @@ mouse-3: go to end"))))
              (when (eq system-type 'darwin)
                ;; OS X bsdtar is mostly compatible with GNU Tar
                (setq dired-guess-shell-gnutar "tar")))
+;;narrow dired to match filter
+(use-package dired-narrow
+  :ensure t
+  :bind (:map dired-mode-map
+              ("/" . dired-narrow)))
+(use-package dired-subtree
+  :ensure t)
+(use-package dired-ranger
+  :ensure t)
+
 ;; I use ibuffer for my C-x C-b binding instead of list-buffers. This
 ;; has the ability to group buffers. I tend to wind up with a lot of
 ;; dired buffers, so it's nice to group them together:
